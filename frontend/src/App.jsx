@@ -1,23 +1,15 @@
-import { useState } from "react";
-import DeckSelector from "./components/DeckSelector";
-import GameBoard from "./components/GameBoard";
-import "./styles/app.css";
+import React from 'react';
+// Pazi na putanju! Ovisno o tome gdje si stavio GameFlow.jsx u odnosu na App.jsx
+import GameFlow from './components/GameFlow';
 
-export default function App() {
-    const [selectedDeck, setSelectedDeck] = useState(null);
-
-    const sampleDecks = [
-        { id: 1, name: "Blue-Eyes Simple" },
-        { id: 2, name: "Dark Magician Simple" },
-    ];
-
+function App() {
     return (
-        <div className="app-shell">
-            {!selectedDeck ? (
-                <DeckSelector decks={sampleDecks} onSelect={setSelectedDeck} />
-            ) : (
-                <GameBoard selectedDeck={selectedDeck} />
-            )}
+        // Ovaj div osigurava da cijela aplikacija nema neželjene margine
+        // i da zauzima cijeli ekran, pripremajući teren za GameFlow.
+        <div style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
+            <GameFlow />
         </div>
     );
 }
+
+export default App;
