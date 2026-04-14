@@ -15,11 +15,10 @@ CREATE TABLE decks (
 );
 
 CREATE TABLE deck_cards (
-                            deck_id BIGINT NOT NULL,
-                            card_id BIGINT NOT NULL,
-                            PRIMARY KEY (deck_id, card_id),
-                            FOREIGN KEY (deck_id) REFERENCES decks(deck_id) ON DELETE CASCADE,
-                            FOREIGN KEY (card_id) REFERENCES cards(card_id) ON DELETE CASCADE
+                            deck_id INT REFERENCES decks(deck_id),
+                            card_id INT REFERENCES cards(card_id),
+                            quantity INT DEFAULT 1,
+                            PRIMARY KEY (deck_id, card_id)
 );
 
 CREATE TABLE player_states (
