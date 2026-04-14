@@ -1,12 +1,10 @@
 import React from 'react';
-// Pazi na putanju! Ovisno o tome gdje si stavio GameFlow.jsx u odnosu na App.jsx
-import GameFlow from './components/GameFlow';
+import GameFlow from './components/GameFlow'; // Prilagodi putanju ako treba
+import './App.css'; // OBAVEZNO dodaj ovaj import!
 
 function App() {
     return (
-        // Ovaj div osigurava da cijela aplikacija nema neželjene margine
-        // i da zauzima cijeli ekran, pripremajući teren za GameFlow.
-        <div style={{ margin: 0, padding: 0, overflow: 'hidden' }}>
+        <div className="app-container">
             <GameFlow />
         </div>
     );

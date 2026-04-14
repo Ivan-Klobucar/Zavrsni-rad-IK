@@ -1,0 +1,161 @@
+/* App.css */
+
+/* --- GLOBALNO --- */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #1a1a1a;
+    color: white;
+    font-family: sans-serif;
+}
+
+/* --- GAME FLOW & MODAL --- */
+.game-flow {
+    width: 100vw;
+    height: 100vh;
+}
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background-color: #333;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* --- BUTTONS --- */
+.btn {
+    padding: 10px 20px; cursor: pointer; margin-top: 15px;
+}
+.btn-primary {
+    padding: 15px 40px; font-size: 18px; background-color: #2ecc71; color: white;
+    border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
+}
+.btn-primary:hover { background-color: #27ae60; }
+
+/* --- DECK SELECTION --- */
+.deck-selection {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+}
+.deck-btn-group {
+    display: flex; gap: 20px;
+}
+.deck-btn {
+    padding: 20px; cursor: pointer; font-size: 16px;
+}
+
+/* --- CUSTOMIZATION --- */
+.customization-container {
+    padding: 40px; display: flex; flex-direction: column; align-items: center;
+    height: 100vh; background-color: #121212; color: white;
+}
+.customization-title { color: #ffd700; }
+.customization-layout {
+    display: flex; gap: 50px; margin-top: 20px; margin-bottom: 30px;
+}
+.deck-section {
+    border: 1px solid #444; padding: 20px; border-radius: 8px; width: 250px; background: #1e1e1e;
+}
+.card-item {
+    padding: 8px; margin: 5px 0; background: #333; border: 1px solid #555; cursor: pointer; font-size: 14px;
+}
+.card-item:hover { background: #444; }
+
+/* --- GAME BOARD --- */
+.game-board {
+    display: flex; width: 100vw; height: 100vh;
+}
+.sidebar {
+    width: 250px; border-right: 2px solid #444; padding: 10px;
+}
+.main-board {
+    flex: 1; display: flex; flex-direction: column; padding: 10px;
+}
+
+/* --- CARD HOVER --- */
+.card-image-placeholder {
+    width: 100%; aspect-ratio: 2/3; border: 1px solid #555; background-color: #222;
+}
+
+/* --- FIELD SIDE & ZONES --- */
+.field-side {
+    flex: 1; display: flex; flex-direction: column; position: relative; justify-content: center; gap: 10px;
+}
+.zones-container {
+    display: flex; flex-direction: row; justify-content: center; gap: 20px; align-items: center;
+}
+.side-column {
+    display: flex; flex-direction: column; gap: 10px;
+}
+.matrix-zones {
+    display: flex; flex-direction: column; gap: 10px;
+}
+.zone-row {
+    display: flex; gap: 10px;
+}
+
+/* Ruka */
+.hand-container {
+    position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; height: 80px; overflow: hidden; z-index: 10;
+}
+.hand-card {
+    width: 60px; height: 100px; background-color: #1e3a8a; border: 1px solid #fff; border-radius: 4px;
+}
+.hand-card:hover { transform: translateY(-10px); transition: 0.2s; cursor: pointer; }
+
+/* Protivnikovo polje (Rotira strukturu) */
+.field-side.opponent { flex-direction: column-reverse; } /* Ruka ide na vrh */
+.field-side.opponent .zones-container { flex-direction: row-reverse; } /* Protivnikov Deck ide na njegovu desnu (našu lijevu) stranu */
+.field-side.opponent .hand-container { top: -30px; bottom: auto; }
+.field-side.opponent .hand-card:hover { transform: translateY(10px); }
+
+/* Pojedinačna zona */
+.card-zone {
+    width: 70px; height: 100px; border: 2px dashed #666;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #aaa; cursor: pointer; transition: 0.2s;
+}
+.card-zone:hover { border-color: #fff; background-color: rgba(255,255,255,0.2) !important; color: #fff; }
+
+/* Ruka */
+.hand-container {
+    position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 5px; height: 80px; overflow: hidden; z-index: 10;
+}
+.hand-card {
+    width: 60px; height: 100px; background-color: #1e3a8a; border: 1px solid #fff; border-radius: 4px;
+}
+.hand-card:hover { transform: translateY(-10px); transition: 0.2s; cursor: pointer;} /* Mali efekt! */
+
+/* Protivnikovo polje (Ovo automatski okreće sve elemente bez JS logike!) */
+.field-side.opponent { flex-direction: column-reverse; }
+.field-side.opponent .zones-container { flex-direction: row-reverse; }
+.field-side.opponent .matrix-zones { flex-direction: column-reverse; }
+.field-side.opponent .deck-grave-zones { flex-direction: column-reverse; }
+.field-side.opponent .hand-container { top: -30px; bottom: auto; }
+
+/* Pojedinačna zona */
+.card-zone {
+    width: 70px; height: 100px; border: 2px dashed #666;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #aaa; cursor: pointer;
+}
+.card-zone:hover { border-color: #fff; }
+
+/* --- PHASE BAR --- */
+.phase-bar {
+    display: flex; justify-content: center; gap: 15px; padding: 10px 0;
+    border-top: 2px solid #555; border-bottom: 2px solid #555; margin: 10px 0;
+}
+.phase-btn {
+    padding: 5px 15px; background: #333; color: #fff; border: 1px solid #777; cursor: pointer;
+}
+.phase-btn:hover { background: #555; }
