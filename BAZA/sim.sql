@@ -6,7 +6,8 @@ CREATE TABLE cards (
                        card_attack INTEGER,
                        card_defense INTEGER,
                        card_cost INTEGER,
-                       card_effect TEXT
+                       card_effect TEXT,
+                       image_url TEXT
 );
 
 CREATE TABLE decks (
