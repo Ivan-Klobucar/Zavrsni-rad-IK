@@ -1,5 +1,6 @@
 package com.app.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ public class DeckCard {
 
     @ManyToOne
     @JoinColumn(name = "deck_id")
+    @JsonIgnore
     private Deck deck;
 
     @ManyToOne

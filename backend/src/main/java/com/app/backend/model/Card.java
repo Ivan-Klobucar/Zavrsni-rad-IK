@@ -20,6 +20,7 @@ public class Card {
     @Column(name = "card_name", nullable = false)
     private String cardName;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "card_type", nullable = false)
     private CardType cardType;
 
