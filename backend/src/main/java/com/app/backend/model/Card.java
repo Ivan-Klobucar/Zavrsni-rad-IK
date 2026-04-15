@@ -34,4 +34,7 @@ public class Card {
 
     @Column(name = "card_effect")
     private String cardEffect;
+
+    @Column(name = "image_url")
+    private String imageUrl;
 }

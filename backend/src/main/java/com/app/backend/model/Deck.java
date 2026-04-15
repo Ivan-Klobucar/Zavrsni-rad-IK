@@ -24,11 +24,6 @@ public class Deck{
     @Column(name = "deck_name")
     private String deckName;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "deck_cards",
-            joinColumns = @JoinColumn(name = "deck_id"),
-            inverseJoinColumns = @JoinColumn(name = "card_id")
-    )
-    private List<Card> deckCards;
+    @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeckCard> deckCards = new ArrayList<>();
 }
