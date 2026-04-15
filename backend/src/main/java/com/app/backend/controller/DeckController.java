@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/decks")
-//@CrossOrigin(origins = "*") // Omogućava pozive iz Reacta
+@CrossOrigin(origins = "*") // Omogućava pozive iz Reacta
 @RequiredArgsConstructor
 public class DeckController {
 
