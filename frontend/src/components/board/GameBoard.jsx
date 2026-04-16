@@ -53,7 +53,7 @@ const GameBoard = ({ boardData }) => {
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#111', color: 'white' }}>
 
             {/* LIJEVI STUPAC: INFO PANEL (Isti kao u kastomizaciji) */}
-            <div style={{ width: '25%', borderRight: '2px solid #444', padding: '20px', backgroundColor: '#1a1a1a', overflowY: 'auto' }}>
+            <div style={{ width: '25%', padding: '20px', borderLeft: '2px solid #444', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 <h2 style={{ textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '10px' }}>Detalji Karte</h2>
                 {hoveredCard ? (
                     <div>

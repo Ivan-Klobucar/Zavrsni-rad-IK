@@ -191,7 +191,7 @@ const Customization = ({ selectedDeck, onReady }) => {
             </div>
 
             {/* DESNI STUPAC: INFO PANEL */}
-            <div style={{ width: '25%', padding: '20px', borderLeft: '2px solid #444', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ width: '25%', padding: '20px', borderLeft: '2px solid #444', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 <button onClick={() => onReady(boardState)} style={{ padding: '15px', fontSize: '18px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold' }}>ZAVRŠI I ZAPOČNI IGRU</button>
                 {hoveredCard ? (
                     <div>
