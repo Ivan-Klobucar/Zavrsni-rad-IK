@@ -1,33 +1,29 @@
 package com.app.backend.model;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.app.backend.dto.CardDTO;
+import java.util.ArrayList;
+import java.util.List;
 
-@Entity
-@Table(name = "game_states")
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class GameState {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "gamestate_id")
-    private Long gameStateId;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "player_id")
     private PlayerState player;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "opponent_id")
     private PlayerState opponent;
+    private String currentPhase; // DP, SP, MP1, BP, MP2, EP
+    private String turnOwner;    // "PLAYER" ili "OPPONENT"
 
-    @Column(name = "turn_number")
-    private Integer turnNumber;
+    public GameState() {
+        this.player = new PlayerState();
+        this.opponent = new PlayerState();
+        this.currentPhase = "MP1";
+        this.turnOwner = "PLAYER";
+    }
 
-    @Column(name = "player_turn")
-    private boolean playerTurn;
+    // Getteri i Setteri
+    public PlayerState getPlayer() { return player; }
+    public void setPlayer(PlayerState player) { this.player = player; }
+    public PlayerState getOpponent() { return opponent; }
+    public void setOpponent(PlayerState opponent) { this.opponent = opponent; }
+    public String getCurrentPhase() { return currentPhase; }
+    public void setCurrentPhase(String currentPhase) { this.currentPhase = currentPhase; }
+    public String getTurnOwner() { return turnOwner; }
+    public void setTurnOwner(String turnOwner) { this.turnOwner = turnOwner; }
 }

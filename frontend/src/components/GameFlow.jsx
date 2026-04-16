@@ -2,21 +2,49 @@ import React, { useState } from 'react';
 import DeckSelection from './DeckSelection';
 import Customization from './Customization';
 import GameBoard from './board/GameBoard';
+import { gameAPI } from '../services/api.js'; // Uvozimo gameAPI
 
 export default function GameFlow() {
     const [gameState, setGameState] = useState('selection');
     const [playerDeck, setPlayerDeck] = useState(null);
     const [boardData, setBoardData] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const handleDeckSelect = (deckName) => {
         setPlayerDeck(deckName);
         setGameState('popup');
     };
 
-    const handleReadyForGame = (finalBoard) => {
-        setBoardData(finalBoard);
-        setGameState('playing');
+    const handleReadyForGame = async (finalBoard) => {
+        setLoading(true);
+        try {
+            // Slažemo payload za backend
+            const payload = {
+                playerDeckName: playerDeck,
+                player: finalBoard.player,
+                opponent: finalBoard.opponent
+            };
+
+            // Pozivamo naš centralizirani API
+            const serverData = await gameAPI.startGame(payload);
+
+            setBoardData(serverData);
+            setGameState('playing');
+        } catch (err) {
+            console.error("Greška pri dohvaćanju GameState-a:", err);
+            alert("Neuspješno pokretanje igre. Provjeri radi li backend.");
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#111', color: '#e5a822', fontSize: '24px' }}>
+                Miješanje karata i priprema dvoboja...
+            </div>
+        );
+    }
 
     return (
         <div className="game-flow">
@@ -42,7 +70,7 @@ export default function GameFlow() {
                 />
             )}
 
-            {gameState === 'playing' && (
+            {gameState === 'playing' && boardData && (
                 <GameBoard boardData={boardData} />
             )}
         </div>

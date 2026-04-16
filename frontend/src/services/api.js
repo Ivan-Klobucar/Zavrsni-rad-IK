@@ -28,4 +28,26 @@ export const deckAPI = {
     }
 };
 
+// Pomoćna funkcija za sigurno spajanje URL-a
+const cleanUrl = (url) => url.replace(/([^:]\/)\/+/g, "$1");
+
+export const gameAPI = {
+    startGame: async (payload) => {
+        // Koristimo cleanUrl da spriječimo duple kose crte (//)
+        const targetUrl = cleanUrl(`${BACKEND_URL}/api/game/start`);
+
+        const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error("Greška na serveru pri pokretanju igre.");
+        }
+
+        return await response.json();
+    }
+};
+
 export default api;
