@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DeckSelection from './DeckSelection'; // Tvoj ekran za odabir
+import DeckSelection from './DeckSelection';
 import Customization from './Customization';
 import GameBoard from './board/GameBoard';
 
@@ -49,7 +49,6 @@ export default function GameFlow() {
     );
 }
 
-// Brzi inline stilovi za popup (možeš ih prebaciti u CSS)
 const modalStyle = { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 };
 const contentStyle = { backgroundColor: '#333', color: 'white', padding: '40px', borderRadius: '10px', textAlign: 'center' };
 const btnStyle = { padding: '10px 20px', fontSize: '18px', backgroundColor: '#e5a822', color: 'black', border: 'none', cursor: 'pointer', marginTop: '20px', fontWeight: 'bold' };
