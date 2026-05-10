@@ -22,23 +22,6 @@ CREATE TABLE deck_cards (
                             PRIMARY KEY (deck_id, card_id)
 );
 
-CREATE TABLE player_states (
-                               player_id BIGSERIAL PRIMARY KEY,
-                               life_points INTEGER,
-                               deck_id BIGINT,
-                               FOREIGN KEY (deck_id) REFERENCES decks(deck_id) ON DELETE SET NULL
-);
-
-CREATE TABLE game_states (
-                             game_state_id BIGSERIAL PRIMARY KEY,
-                             player_id BIGINT,
-                             opponent_id BIGINT,
-                             turn_number INTEGER,
-                             player_turn BOOLEAN DEFAULT TRUE,
-                             FOREIGN KEY (player_id) REFERENCES player_states(player_id) ON DELETE CASCADE,
-                             FOREIGN KEY (opponent_id) REFERENCES player_states(player_id) ON DELETE CASCADE
-);
-
 CREATE TABLE moves (
                        move_id BIGSERIAL PRIMARY KEY,
                        action_type VARCHAR(100),
