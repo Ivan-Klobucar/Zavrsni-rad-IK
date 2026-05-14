@@ -6,6 +6,7 @@ import java.util.List;
 
 public class PlayerState {
     private int lifePoints = 8000;
+    private boolean hasNormalSummonedThisTurn = false;
     private List<CardDTO> hand = new ArrayList<>();
     private List<CardDTO> deck = new ArrayList<>();
     private List<CardDTO> monsterZone = new ArrayList<>();
@@ -16,6 +17,8 @@ public class PlayerState {
     // Getteri i Setteri
     public int getLifePoints() { return lifePoints; }
     public void setLifePoints(int lifePoints) { this.lifePoints = lifePoints; }
+    public boolean isHasNormalSummonedThisTurn() { return hasNormalSummonedThisTurn; }
+    public void setHasNormalSummonedThisTurn(boolean hasNormalSummonedThisTurn) { this.hasNormalSummonedThisTurn = hasNormalSummonedThisTurn; }
     public List<CardDTO> getHand() { return hand; }
     public void setHand(List<CardDTO> hand) { this.hand = hand; }
     public List<CardDTO> getDeck() { return deck; }

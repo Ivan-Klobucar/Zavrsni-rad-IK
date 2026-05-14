@@ -160,3 +160,24 @@ body {
 }
 .phase-btn:hover { background: #555; }
 
+.card-slot-container.is-facedown {
+    /* Ako želiš da se samo čudovišta rotiraju, a ne i trapovi,
+       možeš dodati dodatnu provjeru za tip karte */
+    transform: rotate(0deg); /* Početno stanje */
+}
+
+/* Stil za poledinu koja nestaje na hover */
+.card-back-overlay {
+    transition: opacity 0.3s ease;
+}
+
+/* X-RAY EFEKT: Kada pređeš mišem, poledina postaje skoro skroz prozirna */
+.card-slot-container:hover .card-back-overlay {
+    opacity: 0.1; /* Vidiš kartu "kroz" poledinu */
+}
+
+/* Opcionalno: Povećaj kartu na hover da se bolje vidi */
+.card-slot-container:hover {
+    z-index: 100;
+    transform: scale(1.2);
+}

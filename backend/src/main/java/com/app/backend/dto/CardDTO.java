@@ -1,7 +1,5 @@
 package com.app.backend.dto;
 
-
-
 public class CardDTO {
     private Long cardId;
     private String cardName;
@@ -9,6 +7,7 @@ public class CardDTO {
     private Integer cardAttack;
     private Integer cardDefense;
     private String imageUrl;
+    private Integer cardCost;
     private boolean isFacedown;
 
     // Getteri i Setteri
@@ -26,4 +25,6 @@ public class CardDTO {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public boolean isFacedown() { return isFacedown; }
     public void setFacedown(boolean facedown) { isFacedown = facedown; }
+    public Integer getCardCost() { return cardCost; }
+    public void setCardCost(Integer cardCost) { this.cardCost = cardCost; }
 }

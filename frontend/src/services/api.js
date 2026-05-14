@@ -47,6 +47,71 @@ export const gameAPI = {
         }
 
         return await response.json();
+    },
+
+// Ažuriran changePhase s URLSearchParams
+    changePhase: async (phase) => {
+        const params = new URLSearchParams();
+        params.append('phase', phase);
+
+        const url = `${BACKEND_URL}/api/game/phase?${params.toString()}`;
+
+        const response = await fetch(cleanUrl(url), {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(err || "Greška pri promjeni faze!");
+        }
+        return await response.json();
+    },
+
+    playCard: async (cardId, action, tributes = []) => {
+// Koristimo URLSearchParams za ispravno kodiranje parametara
+        const params = new URLSearchParams();
+        params.append('cardId', cardId);
+        params.append('action', action);
+
+        // Šaljemo tributes samo ako ih ima, Spring će ih prepoznati kao listu
+        if (tributes && tributes.length > 0) {
+            tributes.forEach(id => params.append('tributes', id));
+        }
+
+        const url = `${BACKEND_URL}/api/game/play?${params.toString()}`;
+        console.log("Šaljem zahtjev na:", url); // OVO POGLEDAJ U KONZOLI PREGLEDNIKA (F12)
+        const response = await fetch(cleanUrl(url), {
+            method: 'POST' // Mora biti POST jer je u kontroleru @PostMapping
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(err || "Ilegalna akcija!");
+        }
+        return await response.json();
+    },
+
+// Ažuriran attack s URLSearchParams
+    attack: async (attackerId, targetId) => {
+        const params = new URLSearchParams();
+        params.append('attackerId', attackerId);
+
+        // TargetId dodajemo samo ako nije null (npr. kod direktnog napada je null)
+        if (targetId) {
+            params.append('targetId', targetId);
+        }
+
+        const url = `${BACKEND_URL}/api/game/attack?${params.toString()}`;
+
+        const response = await fetch(cleanUrl(url), {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(err || "Neuspješan napad!");
+        }
+        return await response.json();
     }
 };
 
