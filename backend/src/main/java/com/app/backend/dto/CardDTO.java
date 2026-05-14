@@ -8,7 +8,7 @@ public class CardDTO {
     private Integer cardDefense;
     private String imageUrl;
     private Integer cardCost;
-    private boolean isFacedown;
+    private boolean facedown;
 
     // Getteri i Setteri
     public Long getCardId() { return cardId; }
@@ -23,8 +23,8 @@ public class CardDTO {
     public void setCardDefense(Integer cardDefense) { this.cardDefense = cardDefense; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-    public boolean isFacedown() { return isFacedown; }
-    public void setFacedown(boolean facedown) { isFacedown = facedown; }
+    public boolean isFacedown() { return facedown; }
+    public void setFacedown(boolean facedown) { this.facedown = facedown; }
     public Integer getCardCost() { return cardCost; }
     public void setCardCost(Integer cardCost) { this.cardCost = cardCost; }
 }

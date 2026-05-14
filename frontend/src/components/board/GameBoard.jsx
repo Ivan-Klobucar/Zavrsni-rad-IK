@@ -53,20 +53,23 @@ const GameBoard = ({ boardData: initialBoardData }) => {
 
         // Backend sada radi bez gameId, samo prosljeđujemo podatke
         if (actionType === 'SUMMON') {
-            const cost = selectedHandCard.cardCost || 0;
+            const cost = selectedHandCard.level || selectedHandCard.cardCost || 0;
+
             let tributesNeeded = 0;
             if (cost >= 5 && cost <= 6) tributesNeeded = 1;
             if (cost >= 7) tributesNeeded = 2;
 
-            const myMonstersCount = boardData.player.monsterZone.filter(c => c !== null).length;
-
             if (tributesNeeded > 0) {
+                const myMonstersCount = boardData.player.monsterZone.filter(c => c !== null).length;
+
                 if (myMonstersCount < tributesNeeded) {
                     alert(`Nemaš dovoljno čudovišta za žrtvovanje! Potrebno: ${tributesNeeded}`);
                     return;
                 }
+
+                // Aktivira mod za odabir žrtvi na polju
                 setTributeState({ active: true, needed: tributesNeeded, selectedIds: [] });
-                return;
+                return; // OBAVEZNO prekida izvršavanje ovdje kako bi čekao klik na čudovišta
             }
         }
         executeAction(actionType, []);
@@ -141,8 +144,9 @@ const GameBoard = ({ boardData: initialBoardData }) => {
         if (isAttacking) borderStyle = '3px solid red';
         if (isTributeSelected) borderStyle = '3px solid purple';
 
-        // Dodatne klase za CSS
-        const containerClass = `card-slot-container ${card?.isFacedown ? 'is-facedown' : ''}`;
+        // ISPRAVAK: Backend šalje polje kao "facedown", a ne "isFacedown"
+        const isCardFacedown = card?.facedown === true;
+        const containerClass = `card-slot-container ${isCardFacedown ? 'is-facedown' : ''}`;
 
         return (
             <div
@@ -163,14 +167,12 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                     backgroundSize: 'cover'
                 }}
             >
-                {/* Labela za prazno polje */}
                 {label && !card && type !== 'deck' && type !== 'extra' && (
                     <span style={{ color: '#555', fontSize: '12px', fontWeight: 'bold', position: 'absolute' }}>{label}</span>
                 )}
 
                 {card && (
                     <div className="card-image-wrapper" style={{ width: '100%', height: '100%', position: 'relative' }}>
-                        {/* Prava slika karte (uvijek je tu) */}
                         <img
                             src={`${BACKEND_URL}${card.imageUrl}`}
                             alt="card-front"
@@ -178,12 +180,12 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
-                                transform: isOpponent && !card.isFacedown ? 'rotate(180deg)' : 'none'
+                                // Ako je protivnička karta i NIJE facedown, rotiraj ju
+                                transform: isOpponent && !isCardFacedown ? 'rotate(180deg)' : 'none'
                             }}
                         />
 
-                        {/* Poledina (prikazuje se samo ako je isFacedown true) */}
-                        {card.isFacedown && (
+                        {isCardFacedown && (
                             <img
                                 src={CARD_BACK}
                                 alt="card-back"
