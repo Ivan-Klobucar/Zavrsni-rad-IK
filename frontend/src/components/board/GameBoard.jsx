@@ -13,6 +13,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
 
     // NOVO: Stanje za kraj igre
     const [isGameOver, setIsGameOver] = useState(false);
+    const [gyModal, setGyModal] = useState({ isOpen: false, cards: [], owner: '' });
 
     const currentPhase = boardData?.currentPhase || 'MP1';
     const phases = ['DP', 'SP', 'MP1', 'BP', 'MP2', 'EP'];
@@ -51,7 +52,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
     const handleActionClick = (actionType) => {
         if (!selectedHandCard) return;
 
-        // Backend sada radi bez gameId, samo prosljeđujemo podatke
+        // 1. LOGIKA ZA SUMMON (Žrtvovanje)
         if (actionType === 'SUMMON') {
             const cost = selectedHandCard.level || selectedHandCard.cardCost || 0;
 
@@ -67,11 +68,45 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                     return;
                 }
 
-                // Aktivira mod za odabir žrtvi na polju
-                setTributeState({ active: true, needed: tributesNeeded, selectedIds: [] });
-                return; // OBAVEZNO prekida izvršavanje ovdje kako bi čekao klik na čudovišta
+                // Aktivira mod za odabir žrtvi na TVOM polju
+                setTributeState({ active: true, needed: tributesNeeded, selectedIds: [], action: 'SUMMON', target: 'MY_FIELD' });
+                return; // Prekida izvršavanje, čeka klik
             }
         }
+
+        // 2. LOGIKA ZA ACTIVATE (Odabir meta za magije)
+        if (actionType === 'ACTIVATE') {
+            const spellName = selectedHandCard.cardName;
+
+            if (spellName === 'Monster Reborn') {
+                const totalGyMonsters = [...boardData.player.graveyard, ...boardData.opponent.graveyard]
+                    .filter(c => c.cardType === 'MONSTER').length;
+
+                if (totalGyMonsters === 0) {
+                    alert("Nema čudovišta u grobljima za prizivanje!");
+                    return;
+                }
+
+                alert("Otvori groblje i odaberi čudovište za prizivanje!");
+                // Aktivira mod za odabir mete u BILO KOJEM groblju
+                setTributeState({ active: true, needed: 1, selectedIds: [], action: 'ACTIVATE', target: 'ANY_GY' });
+                return;
+            }
+
+            if (spellName === 'Dragon Strike') { // Ovdje upiši pravo ime svoje karte
+                const oppMonsters = boardData.opponent.monsterZone.filter(c => c !== null).length;
+                if (oppMonsters === 0) {
+                    alert("Protivnik nema čudovišta na polju!");
+                    return;
+                }
+
+                // Aktivira mod za odabir mete na PROTIVNIKOVOM polju
+                setTributeState({ active: true, needed: 1, selectedIds: [], action: 'ACTIVATE', target: 'OPP_FIELD' });
+                return;
+            }
+        }
+
+        // Ako akcija ne zahtijeva odabir (npr. Pot of Greed, Dark Hole, običan Summon, SET), samo ju izvrši
         executeAction(actionType, []);
     };
 
@@ -88,22 +123,33 @@ const GameBoard = ({ boardData: initialBoardData }) => {
 
     const handlePlayerMonsterClick = (card) => {
         if (!card) return;
-        if (tributeState.active) {
-            if (tributeState.selectedIds.includes(card.cardId)) return;
+
+        // Ako biramo žrtve za SUMMON na SVOM polju
+        if (tributeState.active && tributeState.target === 'MY_FIELD') {
+            if (tributeState.selectedIds.includes(card.cardId)) return; // Već odabrano
+
             const newSelected = [...tributeState.selectedIds, card.cardId];
             if (newSelected.length === tributeState.needed) {
-                executeAction('SUMMON', newSelected);
+                executeAction(tributeState.action, newSelected); // Šaljemo akciju (SUMMON) i ID-jeve
             } else {
                 setTributeState({ ...tributeState, selectedIds: newSelected });
             }
             return;
         }
+
         if (currentPhase === 'BP') {
             setAttackingMonster(card);
         }
     };
 
     const handleOpponentMonsterClick = async (targetCard) => {
+        // Ako biramo metu za MAGIJU na PROTIVNIKOVOM polju
+        if (tributeState.active && tributeState.target === 'OPP_FIELD') {
+            if (!targetCard) return;
+            executeAction(tributeState.action, [targetCard.cardId]); // Izvrši ACTIVATE s metom
+            return;
+        }
+
         if (currentPhase !== 'BP') return;
         if (!attackingMonster) {
             alert("Prvo odaberi svoje čudovište s kojim želiš napasti!");
@@ -148,9 +194,29 @@ const GameBoard = ({ boardData: initialBoardData }) => {
         const isCardFacedown = card?.facedown === true;
         const containerClass = `card-slot-container ${isCardFacedown ? 'is-facedown' : ''}`;
 
+        const displayImageUrl = card
+            ? (isOpponent && isCardFacedown ? CARD_BACK : `${BACKEND_URL}${card.imageUrl}`)
+            : '';
+
         return (
             <div
-                onMouseEnter={() => card && setHoveredCard(card)}
+                onMouseEnter={() => {
+                    if (card) {
+                        // NOVO: Ako je karta protivnička i okrenuta licem prema dolje, šaljemo lažni objekt!
+                        if (isOpponent && isCardFacedown) {
+                            setHoveredCard({
+                                cardName: "Nepoznata karta",
+                                cardType: "???",
+                                imageUrl: "/images/cards/card_back.jpg",
+                                cardAttack: null,
+                                cardDefense: null
+                            });
+                        } else {
+                            // Inače prikazujemo prave detalje
+                            setHoveredCard(card);
+                        }
+                    }
+                }}
                 onClick={() => onClick && onClick(card)}
                 className={containerClass}
                 style={{
@@ -174,7 +240,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                 {card && (
                     <div className="card-image-wrapper" style={{ width: '100%', height: '100%', position: 'relative' }}>
                         <img
-                            src={`${BACKEND_URL}${card.imageUrl}`}
+                            src={displayImageUrl}
                             alt="card-front"
                             style={{
                                 width: '100%',
@@ -185,7 +251,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                             }}
                         />
 
-                        {isCardFacedown && (
+                        {isCardFacedown && !isOpponent && (
                             <img
                                 src={CARD_BACK}
                                 alt="card-back"
@@ -288,7 +354,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                                     card={opponentTopGyCard}
                                     isOpponent={true}
                                     label="GY"
-                                    onClick={() => opponentTopGyCard && setHoveredCard(opponentTopGyCard)}
+                                    onClick={() => setGyModal({ isOpen: true, cards: boardData.opponent.graveyard, owner: 'Protivnikovo' })}
                                 />
                                 {boardStateHelper(boardData.opponent.monsterZone).reverse().map((card, i) => <CardSlot key={`om-${i}`} card={card} isOpponent={true} label="Mon" onClick={card ? () => handleOpponentMonsterClick(card) : null} />)}
                                 <CardSlot type="field" isOpponent={true} label="Field" />
@@ -305,7 +371,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                                     type="gy"
                                     card={playerTopGyCard}
                                     label="GY"
-                                    onClick={() => playerTopGyCard && setHoveredCard(playerTopGyCard)}
+                                    onClick={() => setGyModal({ isOpen: true, cards: boardData.player.graveyard, owner: 'Tvoje' })}
                                 />
                             </div>
                             <div style={{ display: 'flex', gap: '10px' }}>
@@ -324,6 +390,53 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                         ))}
                     </div>
                 </div>
+                {/* GRAVEYARD MODAL */}
+                {gyModal.isOpen && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <div style={{ backgroundColor: '#1a1a1a', padding: '30px', borderRadius: '12px', width: '80%', maxHeight: '80vh', overflowY: 'auto', border: '3px solid #e5a822' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
+                                <h2 style={{ color: '#e5a822', margin: 0 }}>{gyModal.owner} Groblje</h2>
+                                <button onClick={() => setGyModal({ isOpen: false, cards: [], owner: '' })} style={{ padding: '10px 20px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold', borderRadius: '5px' }}>X Zatvori</button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
+                                {gyModal.cards && gyModal.cards.length > 0 ? (
+                                    gyModal.cards.map((c, i) => (
+                                        <div
+                                            key={`gy-card-${i}`}
+                                            style={{
+                                                width: '100px',
+                                                cursor: 'pointer',
+                                                transition: 'transform 0.2s',
+                                                // NOVO: Ako je aktiviran mod za biranje iz GY-a i karta je čudovište, daj joj zeleni sjaj (glow)
+                                                boxShadow: tributeState.active && tributeState.target === 'ANY_GY' && c.cardType === 'MONSTER' ? '0 0 15px #00ff00' : 'none',
+                                                borderRadius: '4px'
+                                            }}
+                                            onMouseEnter={() => setHoveredCard(c)}
+                                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                                            onClick={() => {
+                                                // NOVO: Logika za hvatanje klika i slanje ID-ja karte na backend
+                                                if (tributeState.active && tributeState.target === 'ANY_GY') {
+                                                    if (c.cardType !== 'MONSTER') {
+                                                        alert("Moraš odabrati čudovište!");
+                                                        return;
+                                                    }
+                                                    setGyModal({ isOpen: false, cards: [], owner: '' }); // Zatvori modal nakon odabira
+                                                    executeAction(tributeState.action, [c.cardId]); // Šalje akciju (npr. ACTIVATE) i ID odabrane karte
+                                                }
+                                            }}
+                                        >
+                                            <img src={`${BACKEND_URL}${c.imageUrl}`} alt={c.cardName} style={{ width: '100%', borderRadius: '4px', border: '1px solid #555' }} />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p style={{ color: '#aaa', fontSize: '18px' }}>Ovo groblje je prazno.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
