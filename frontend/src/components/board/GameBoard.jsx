@@ -54,6 +54,10 @@ const GameBoard = ({ boardData: initialBoardData }) => {
 
         // 1. LOGIKA ZA SUMMON (Žrtvovanje)
         if (actionType === 'SUMMON') {
+            if (boardData.player.hasNormalSummonedThisTurn) {
+                alert("Već si iskoristio Normal Summon ovog poteza!");
+                return;
+            }
             const cost = selectedHandCard.level || selectedHandCard.cardCost || 0;
 
             let tributesNeeded = 0;
@@ -78,29 +82,32 @@ const GameBoard = ({ boardData: initialBoardData }) => {
         if (actionType === 'ACTIVATE') {
             const spellName = selectedHandCard.cardName;
 
-            if (spellName === 'Monster Reborn') {
-                const totalGyMonsters = [...boardData.player.graveyard, ...boardData.opponent.graveyard]
-                    .filter(c => c.cardType === 'MONSTER').length;
+            if (spellName === 'A Beasts Revival') {
+                const combinedGy = [...boardData.player.graveyard, ...boardData.opponent.graveyard]
+                    .filter(c => c.cardType.toUpperCase().includes('MONSTER'));
 
-                if (totalGyMonsters === 0) {
+                if (combinedGy.length === 0) {
                     alert("Nema čudovišta u grobljima za prizivanje!");
                     return;
                 }
 
-                alert("Otvori groblje i odaberi čudovište za prizivanje!");
-                // Aktivira mod za odabir mete u BILO KOJEM groblju
+                // Otvaramo GY Modal i dajemo mu KOMBIRANU listu!
+                setGyModal({ isOpen: true, cards: combinedGy, owner: 'Zajedničko' });
                 setTributeState({ active: true, needed: 1, selectedIds: [], action: 'ACTIVATE', target: 'ANY_GY' });
                 return;
             }
 
-            if (spellName === 'Dragon Strike') { // Ovdje upiši pravo ime svoje karte
+            // TVOJ CUSTOM SPELL
+            if (spellName === 'Chaotic Orb' || spellName === 'Dragons Call') {
+                // Pokreće biranje mete na protivnikovom polju
                 const oppMonsters = boardData.opponent.monsterZone.filter(c => c !== null).length;
                 if (oppMonsters === 0) {
                     alert("Protivnik nema čudovišta na polju!");
                     return;
                 }
+                alert("Odaberi protivnikovo čudovište za uništenje!");
 
-                // Aktivira mod za odabir mete na PROTIVNIKOVOM polju
+                // OBAVEZNO target mora biti 'OPP_FIELD'
                 setTributeState({ active: true, needed: 1, selectedIds: [], action: 'ACTIVATE', target: 'OPP_FIELD' });
                 return;
             }
@@ -117,7 +124,8 @@ const GameBoard = ({ boardData: initialBoardData }) => {
             setSelectedHandCard(null);
             setTributeState({ active: false, needed: 0, selectedIds: [] });
         } catch (err) {
-            alert(err.message || "Neuspješna akcija!");
+            alert(error.message || "Greška pri izvršavanju akcije!");
+            setTributeState({ active: false, needed: 0, selectedIds: [], action: null, target: null });
         }
     };
 
@@ -146,7 +154,10 @@ const GameBoard = ({ boardData: initialBoardData }) => {
         // Ako biramo metu za MAGIJU na PROTIVNIKOVOM polju
         if (tributeState.active && tributeState.target === 'OPP_FIELD') {
             if (!targetCard) return;
-            executeAction(tributeState.action, [targetCard.cardId]); // Izvrši ACTIVATE s metom
+
+            // Gasimo mod za biranje i šaljemo napad
+            setTributeState({ active: false, needed: 0, selectedIds: [], action: null, target: null });
+            executeAction(tributeState.action, [targetCard.cardId]);
             return;
         }
 

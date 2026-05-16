@@ -9,6 +9,8 @@ public class CardDTO {
     private String imageUrl;
     private Integer cardCost;
     private boolean facedown;
+    private String originalOwner;
+    private boolean hasAttackedThisTurn;
 
     // Getteri i Setteri
     public Long getCardId() { return cardId; }
@@ -27,4 +29,8 @@ public class CardDTO {
     public void setFacedown(boolean facedown) { this.facedown = facedown; }
     public Integer getCardCost() { return cardCost; }
     public void setCardCost(Integer cardCost) { this.cardCost = cardCost; }
+    public String getOriginalOwner() { return originalOwner; }
+    public void setOriginalOwner(String originalOwner) { this.originalOwner = originalOwner; }
+    public boolean isHasAttackedThisTurn() { return hasAttackedThisTurn; }
+    public void setHasAttackedThisTurn(boolean hasAttackedThisTurn) {this.hasAttackedThisTurn = hasAttackedThisTurn;}
 }
