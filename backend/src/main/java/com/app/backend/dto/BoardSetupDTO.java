@@ -21,6 +21,7 @@ public class BoardSetupDTO {
         private List<CardDTO> monsterZone;
         private List<CardDTO> spellTrapZone;
         private List<CardDTO> graveyard;
+        private List<CardDTO> hand;
 
         // Getteri i Setteri
         public CardDTO getFieldZone() { return fieldZone; }
@@ -31,5 +32,7 @@ public class BoardSetupDTO {
         public void setSpellTrapZone(List<CardDTO> spellTrapZone) { this.spellTrapZone = spellTrapZone; }
         public List<CardDTO> getGraveyard() { return graveyard; }
         public void setGraveyard(List<CardDTO> graveyard) { this.graveyard = graveyard; }
+        public List<CardDTO> getHand() { return hand; }
+        public void setHand(List<CardDTO> hand) { this.hand = hand; }
     }
 }

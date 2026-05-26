@@ -112,6 +112,23 @@ export const gameAPI = {
             throw new Error(err || "Neuspješan napad!");
         }
         return await response.json();
+    },
+
+    downloadStatistics: async (boardData) => {
+        const response = await fetch('http://localhost:8080/api/game/statistics/download', {
+            method: 'POST', // Promijenjeno u POST
+            headers: {
+                'Accept': 'application/pdf',
+                'Content-Type': 'application/json' // Govorimo backendu da šaljemo JSON
+            },
+            body: JSON.stringify(boardData) // Šaljemo trenutno stanje igre
+        });
+
+        if (!response.ok) {
+            throw new Error("Greška pri preuzimanju statistike s backenda.");
+        }
+
+        return await response.blob();
     }
 };
 

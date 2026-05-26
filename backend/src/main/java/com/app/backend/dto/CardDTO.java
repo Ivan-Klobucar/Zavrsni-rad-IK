@@ -1,5 +1,8 @@
 package com.app.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CardDTO {
     private Long cardId;
     private String cardName;
@@ -11,7 +14,11 @@ public class CardDTO {
     private boolean facedown;
     private String originalOwner;
     private boolean hasAttackedThisTurn;
+    private Double summonSuccessProb; // Može biti null za Spell/Trap
+    private Double activateSuccessProb; // Za magije, trenutno 100.0
+    private Double attackSuccessProb;
 
+    public CardDTO() {}
     // Getteri i Setteri
     public Long getCardId() { return cardId; }
     public void setCardId(Long cardId) { this.cardId = cardId; }
@@ -33,4 +40,10 @@ public class CardDTO {
     public void setOriginalOwner(String originalOwner) { this.originalOwner = originalOwner; }
     public boolean isHasAttackedThisTurn() { return hasAttackedThisTurn; }
     public void setHasAttackedThisTurn(boolean hasAttackedThisTurn) {this.hasAttackedThisTurn = hasAttackedThisTurn;}
+    public Double getSummonSuccessProb() { return summonSuccessProb; }
+    public void setActivateSuccessProb(Double activateSuccessProb) {this.activateSuccessProb = activateSuccessProb;}
+    public Double getActivateSuccessProb() { return activateSuccessProb; }
+    public void setSummonSuccessProb(Double summonSuccessProb) {this.summonSuccessProb = summonSuccessProb;}
+    public Double getAttackSuccessProb() { return attackSuccessProb; }
+    public void setAttackSuccessProb(Double attackSuccessProb) { this.attackSuccessProb = attackSuccessProb; }
 }
