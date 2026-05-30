@@ -25,15 +25,26 @@ public class TurnStatisticsDTO {
 
     // Pomoćna metoda za računanje "Sume čudovišta"
     public int getMonsterSum() {
-        return (monstersDestroyed != null ? monstersDestroyed : 0) - (monstersLost != null ? monstersLost : 0);
+        // Obična čudovišta gube 1 bod. Jaka čudovišta gube 2 boda.
+        // Kako 'monstersLost' sadrži UKUPAN broj izgubljenih čudovišta,
+        // obična čudovišta računamo tako da od ukupnih oduzmemo ona jaka.
+        int standardMonstersLost = this.monstersLost - this.highAtkMonstersLost;
+
+        int penalty = (standardMonstersLost * 1) + (this.highAtkMonstersLost * 2);
+
+        // Uništavanje protivničkih nosi +1
+        return this.monstersDestroyed - penalty;
     }
 
-    // Pomoćna metoda za ocjenu kruga
     public String getTurnVerdict() {
         int sum = getMonsterSum();
-        if (sum > 0) return "USPJEŠAN (Pozitivna ekonomija resursa)";
-        if (sum < 0) return "NEUSPJEŠAN (Gubitak ključnih resursa)";
-        return "PASIVAN (Postavljanje ploče / Setup)";
+        if (sum > 0) {
+            return "POZITIVAN (Stjecanje prednosti na ploči)";
+        } else if (sum < 0) {
+            return "NEGATIVAN (Kritičan gubitak resursa)";
+        } else {
+            return "NEUTRALAN (Održavanje statusa quo)";
+        }
     }
 
     // Getteri i Setteri

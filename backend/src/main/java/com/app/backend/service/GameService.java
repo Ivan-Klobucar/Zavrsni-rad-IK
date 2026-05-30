@@ -60,10 +60,14 @@ public class GameService {
     private void recordPlayerMonsterLost(CardDTO monster, String reason) {
         if (monster == null) return;
         TurnStatisticsDTO stats = currentGame.getStatistics();
+
         stats.setMonstersLost(stats.getMonstersLost() + 1);
-        if (monster.getCardAttack() != null && monster.getCardAttack() >= 1500) {
+
+        // OVDJE JE PROMJENA: Provjeravamo je li ATK strogo veći od 2000
+        if (monster.getCardAttack() != null && monster.getCardAttack() > 2000) {
             stats.setHighAtkMonstersLost(stats.getHighAtkMonstersLost() + 1);
         }
+
         stats.getActionLog().add("GUBITAK: " + monster.getCardName() + " (" + reason + ")");
     }
 
@@ -198,7 +202,7 @@ public class GameService {
 
             // AI Statistika za Summon (prag od 50%)
             double summonChance = calculateSummonSuccessRate(currentGame);
-            boolean followedAI = summonChance >= 50.0;
+            boolean followedAI = summonChance >= 85.0;
 
             int cost = cardToPlay.getCardCost() != null ? cardToPlay.getCardCost() : 0;
             int requiredTributes = 0;
@@ -336,7 +340,7 @@ public class GameService {
 
         // AI Statistika za Napad
         double attackChance = calculateAttackSuccessRate(currentGame);
-        boolean followedAI = attackChance >= 50.0;
+        boolean followedAI = attackChance >= 85.0;
 
         // Provjera zamki
         if (checkOpponentAttackReactions(currentGame, attacker)) {
@@ -464,11 +468,39 @@ public class GameService {
 
     public GameState changePhase(String nextPhase) {
         if (currentGame == null) throw new RuntimeException("Igra nije pokrenuta!");
-        currentGame.setCurrentPhase(nextPhase);
 
-        if (nextPhase.equals("EP")) {
+        // Ako upravo prelazimo u End Phase (EP)
+        if (nextPhase.equals("EP") && !currentGame.getCurrentPhase().equals("EP")) {
+
+            // --- 1. PROVJERA ZA PAMETNO SUZDRŽAVANJE OD PRIZIVANJA ---
+            boolean hasMonsterInHand = currentGame.getPlayer().getHand().stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(c -> c.getCardType().equals("MONSTER"));
+            boolean canSummon = !currentGame.getPlayer().isHasNormalSummonedThisTurn() && hasMonsterInHand;
+            double summonChance = calculateSummonSuccessRate(currentGame);
+
+            // Ako je mogao prizvati, ali je šansa bila loša (<85%), a on NIJE prizvao
+            if (canSummon && summonChance < 85.0) {
+                recordAiDecision(true, true); // Poslušao AI = Da, Uspjeh = Da (sačuvao je resurs)
+                currentGame.getStatistics().getActionLog().add("PAMETAN POTEZ: Korisnik se suzdržao od rizičnog prizivanja.");
+            }
+
+            // --- 2. PROVJERA ZA PAMETNO SUZDRŽAVANJE OD NAPADA ---
+            boolean hasReadyMonsterOnField = currentGame.getPlayer().getMonsterZone().stream()
+                    .filter(Objects::nonNull)
+                    .anyMatch(c -> !c.isHasAttackedThisTurn());
+            double attackChance = calculateAttackSuccessRate(currentGame);
+
+            // Ako je imao spremno čudovište, šansa je bila loša (<85%), a on NIJE napao
+            if (hasReadyMonsterOnField && attackChance < 85.0) {
+                recordAiDecision(true, true); // Poslušao AI = Da, Uspjeh = Da (izbjegao je zamku)
+                currentGame.getStatistics().getActionLog().add("PAMETAN POTEZ: Korisnik se suzdržao od rizičnog napada.");
+            }
+
+            // --- RESETIRANJE VARIJABLI ZA KRAJ KRUGA ---
             currentGame.getPlayer().setHasNormalSummonedThisTurn(false);
             currentGame.getOpponent().setHasNormalSummonedThisTurn(false);
+
             currentGame.getPlayer().getMonsterZone().stream()
                     .filter(Objects::nonNull)
                     .forEach(c -> c.setHasAttackedThisTurn(false));
@@ -477,6 +509,8 @@ public class GameService {
                     .filter(Objects::nonNull)
                     .forEach(c -> c.setHasAttackedThisTurn(false));
         }
+
+        currentGame.setCurrentPhase(nextPhase);
         enrichHandWithProbabilities(currentGame);
         return currentGame;
     }
