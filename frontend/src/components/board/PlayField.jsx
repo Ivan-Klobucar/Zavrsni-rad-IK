@@ -4,7 +4,7 @@ import CardSlot from './CardSlot';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 const boardStateHelper = (zoneArray) => { const arr = [...(zoneArray || [])]; while (arr.length < 5) arr.push(null); return arr.slice(0, 5); };
 
-const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameOver, attackingMonster, handleOpponentMonsterClick, setHoveredCard, setGyModal, opponentTopGyCard, playerTopGyCard, handlePlayerMonsterClick, canDoMainPhaseActions, setSelectedHandCard, selectedHandCard, tributeState, handleDownloadPDF }) => {
+const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameOver, attackingMonster, handleOpponentMonsterClick, setHoveredCard, setGyModal, opponentTopGyCard, playerTopGyCard, handlePlayerMonsterClick, canDoMainPhaseActions, setSelectedHandCard, selectedHandCard, tributeState, handleDownloadPDF, handleResetGame }) => {
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minWidth: 0 }}>
 
@@ -17,7 +17,16 @@ const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameO
                         <p style={{ margin: '5px 0', fontSize: '13px' }}><b>Procjena AI agenta:</b></p>
                         <p style={{ margin: '0', color: '#00ff00', fontWeight: 'bold' }}>Uspješan Setup (+2)</p>
                     </div>
-                    <button onClick={handleDownloadPDF} style={{ width: '100%', padding: '12px', backgroundColor: '#e5a822', color: 'black', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.target.style.backgroundColor = '#f7b92c'} onMouseOut={e => e.target.style.backgroundColor = '#e5a822'}>Preuzmi Statistiku (PDF)</button>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <button onClick={handleDownloadPDF} style={{ width: '100%', padding: '12px', backgroundColor: '#e5a822', color: 'black', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.target.style.backgroundColor = '#f7b92c'} onMouseOut={e => e.target.style.backgroundColor = '#e5a822'}>
+                            Preuzmi Statistiku (PDF)
+                        </button>
+
+                        <button onClick={handleResetGame} style={{ width: '100%', padding: '12px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={e => e.target.style.backgroundColor = '#c82333'} onMouseOut={e => e.target.style.backgroundColor = '#dc3545'}>
+                            Nova Igra (Povratak u meni)
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -43,10 +52,11 @@ const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameO
                     <button onClick={() => handleOpponentMonsterClick(null)} style={{ position: 'absolute', top: '35%', padding: '15px 30px', backgroundColor: 'red', color: 'white', fontWeight: 'bold', fontSize: '18px', border: '2px solid white', cursor: 'pointer', zIndex: 10, borderRadius: '8px' }}>DIRECT ATTACK!</button>
                 )}
 
+                {/* SIGURNOSNA PROVJERA DODANA U PROTIVNIČKU RUKU */}
                 <div style={{ display: 'flex', gap: '5px', height: '12%', minHeight: '60px', justifyContent: 'center', flexShrink: 0 }}>
                     {boardData.opponent.hand.map((card, i) => (
-                        <div key={`oh-${i}`} onMouseEnter={() => { if (isGameOver) setHoveredCard(card); else setHoveredCard({ cardName: "Nepoznata karta", cardType: "???", imageUrl: "/images/cards/card_back.jpg", cardAttack: null, cardDefense: null }); }} style={{ height: '100%', aspectRatio: '59/86', border: '1px solid #555', backgroundColor: '#111', borderRadius: '4px', overflow: 'hidden' }}>
-                            <img src={isGameOver ? `${BACKEND_URL}${card.imageUrl}` : `${BACKEND_URL}/images/cards/card_back.jpg`} alt="opponent-hand" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <div key={`oh-${i}`} onMouseEnter={() => { if (isGameOver && card) setHoveredCard(card); else setHoveredCard({ cardName: "Nepoznata karta", cardType: "???", imageUrl: "/images/cards/card_back.jpg", cardAttack: null, cardDefense: null }); }} style={{ height: '100%', aspectRatio: '59/86', border: '1px solid #555', backgroundColor: '#111', borderRadius: '4px', overflow: 'hidden' }}>
+                            <img src={isGameOver && card && card.imageUrl ? `${BACKEND_URL}${card.imageUrl}` : `${BACKEND_URL}/images/cards/card_back.jpg`} alt="opponent-hand" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                     ))}
                 </div>
@@ -84,7 +94,7 @@ const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameO
                 <div style={{ display: 'flex', gap: '5px', height: '15%', minHeight: '80px', justifyContent: 'center', alignItems: 'flex-end', flexShrink: 0 }}>
                     {boardData.player.hand.map((card, i) => (
                         <div key={`ph-${i}`} onMouseEnter={() => setHoveredCard(card)} onClick={() => (canDoMainPhaseActions && !isGameOver) ? setSelectedHandCard(card) : null} style={{ height: '100%', aspectRatio: '59/86', cursor: (canDoMainPhaseActions && !isGameOver) ? 'pointer' : 'default', border: selectedHandCard?.cardId === card.cardId ? '3px solid #e5a822' : '1px solid #888', borderRadius: '4px', overflow: 'hidden', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = (canDoMainPhaseActions && !isGameOver) ? 'translateY(-10px)' : 'none'} onMouseOut={e => e.currentTarget.style.transform = 'none'}>
-                            <img src={`${BACKEND_URL}${card.imageUrl}`} alt="hand" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={card && card.imageUrl ? `${BACKEND_URL}${card.imageUrl}` : `${BACKEND_URL}/images/cards/card_back.jpg`} alt="hand" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         </div>
                     ))}
                 </div>

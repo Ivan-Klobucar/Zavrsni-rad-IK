@@ -25,87 +25,131 @@ public class StatisticsPdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // Fontovi
+            // Definiranje fontova i boja za dinamičke izvještaje
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
             Font sectionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
-            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
-            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            Font highlightFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            Font dangerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
+            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+
+            // Boje za ocjene
+            Font uspjehFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, new Color(0, 150, 0));
+            Font losFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, Color.RED);
+            Font pasivanFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, Color.BLUE);
 
             // NASLOV
-            Paragraph title = new Paragraph("Analiza Poteza i Upravljanje Resursima", titleFont);
+            Paragraph title = new Paragraph("PROBABILISTICKA ANALIZA I EVALUACIJA RESURSA", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
             document.add(new Paragraph("\n"));
 
-            // UVOD - Edukativni dio za komisiju
-            document.add(new Paragraph("Kratki pregled: Ova igra temelji se na ekonomiji resursa. Čudovišta predstavljaju ključni kapital na ploči. Gubitak čudovišta bez adekvatne kompenzacije predstavlja strateški zaostatak.", normalFont));
-            document.add(new Paragraph("--------------------------------------------------------------------------------------------------"));
-            document.add(new Paragraph("\n"));
-
             TurnStatisticsDTO stats = gameState.getStatistics();
             if (stats != null) {
-                // 1. EKONOMIJA ČUDOVIŠTA (Monster Sum)
-                document.add(new Paragraph("1. Ekonomija Čudovišta (Monster Sum)", sectionFont));
-                document.add(new Paragraph("Uništena protivnička čudovišta (+): " + stats.getMonstersDestroyed(), normalFont));
-                document.add(new Paragraph("Izgubljena vlastita čudovišta (-): " + stats.getMonstersLost(), normalFont));
 
-                if (stats.getHighAtkMonstersLost() > 0) {
-                    document.add(new Paragraph("UPOZORENJE: Izgubljeno je " + stats.getHighAtkMonstersLost() + " čudovišta visoke snage napada!", dangerFont));
-                }
+                // 1. EKONOMIJA ČUDOVIŠTA (Weighted Counter)
+                document.add(new Paragraph("1. Ekonomska Bilanca Čudovišta na Ploči", sectionFont));
+                document.add(new Paragraph(" • Dobivena vlastita čudovišta: +" + stats.getMonstersGained(), normalFont));
+                document.add(new Paragraph(" • Izgubljena vlastita čudovišta (<2000 ATK): -" + stats.getMonstersLostNormal(), normalFont));
+                document.add(new Paragraph(" • Izgubljena kapitalna čudovišta (>=2000 ATK): -" + (stats.getMonstersLostBoss() * 2) + " (Količina: " + stats.getMonstersLostBoss() + ")", normalFont));
+                document.add(new Paragraph(" • Uništena protivnička čudovišta (<2000 ATK): +" + stats.getMonstersDestroyedNormal(), normalFont));
+                document.add(new Paragraph(" • Uništena protivnička kapitalna čudovišta (>=2000 ATK): +" + (stats.getMonstersDestroyedBoss() * 2) + " (Količina: " + stats.getMonstersDestroyedBoss() + ")", normalFont));
 
-                int sum = stats.getMonsterSum();
-                Paragraph sumPara = new Paragraph("Ukupna suma poteza: " + sum, boldFont);
+                // Formula za izračun sume
+                int monsterSum = (stats.getMonstersGained() * 1)
+                        + (stats.getMonstersDestroyedNormal() * 1)
+                        + (stats.getMonstersDestroyedBoss() * 2)
+                        - (stats.getMonstersLostNormal() * 1)
+                        - (stats.getMonstersLostBoss() * 2);
+
+                Paragraph sumPara = new Paragraph("Ukupni indeks ekonomske sume: " + monsterSum, boldFont);
                 document.add(sumPara);
 
-                Paragraph verdictPara = new Paragraph("Ocjena poteza: " + stats.getTurnVerdict(), highlightFont);
+                // Ispis različitih stanja ovisno o sumi
+                Paragraph verdictPara = new Paragraph();
+                verdictPara.add(new Chunk("Ocjena taktičkog poteza: "));
+                if (monsterSum > 0) {
+                    verdictPara.add(new Chunk("USPJEŠAN POTEZ (Ostvarena je prednost u resursima na ploči)", uspjehFont));
+                } else if (monsterSum < 0) {
+                    verdictPara.add(new Chunk("LOŠ POTEZ (Pretrpljen je kritičan gubitak resursa)", losFont));
+                } else {
+                    verdictPara.add(new Chunk("PASIVAN I SIGURAN POTEZ (Održan je status quo i stabilnost polja)", pasivanFont));
+                }
                 document.add(verdictPara);
                 document.add(new Paragraph("\n"));
 
-                // 2. LOGIKA POTEZA
-                document.add(new Paragraph("2. Dnevnik Akcija i Posljedica", sectionFont));
-                if (stats.getActionLog() != null && !stats.getActionLog().isEmpty()) {
-                    for (String action : stats.getActionLog()) {
-                        document.add(new Paragraph(" • " + action, normalFont));
+                // 2. DETALJNI DNEVNIK UNIŠTENJA
+                document.add(new Paragraph("2. Specifikacija Uništenih Karata", sectionFont));
+                if (stats.getDestructionLog() != null && !stats.getDestructionLog().isEmpty()) {
+                    for (String logEntry : stats.getDestructionLog()) {
+                        document.add(new Paragraph(logEntry, normalFont));
                     }
                 } else {
-                    document.add(new Paragraph("Nije zabilježena značajna akcija u ovom potezu.", normalFont));
+                    document.add(new Paragraph(" • U ovom krugu nije zabilježeno uništenje čudovišta.", normalFont));
                 }
                 document.add(new Paragraph("\n"));
 
-                // 3. AI ANALIZA
-                document.add(new Paragraph("3. Analiza AI Savjetnika", sectionFont));
-                int followedRate = stats.getAiFollowedTotal() > 0 ?
-                        (stats.getAiFollowedSuccesses() * 100 / stats.getAiFollowedTotal()) : 0;
-                int ignoredRate = stats.getAiIgnoredTotal() > 0 ?
-                        (stats.getAiIgnoredSuccesses() * 100 / stats.getAiIgnoredTotal()) : 0;
+                // 3. USKLAĐENOST S AI-EM I EVALUACIJA INTUICIJE
+                document.add(new Paragraph("3. Evaluacija Odluka i Usporedba s AI Agentom", sectionFont));
+                document.add(new Paragraph(" • Broj situacija u kojima je korisnik PRATIO AI (Aktivno/Pasivno): " + stats.getAiFollowedCount(), normalFont));
+                document.add(new Paragraph(" • Broj situacija u kojima je korisnik IGNORIRAO AI (Aktivno/Pasivno): " + stats.getAiIgnoredCount(), normalFont));
 
-                document.add(new Paragraph("Uspješnost kada je korisnik SLUŠAO AI: " + followedRate + "% (" + stats.getAiFollowedSuccesses() + "/" + stats.getAiFollowedTotal() + ")", normalFont));
-                document.add(new Paragraph("Uspješnost kada je korisnik IGNORIRAO AI: " + ignoredRate + "% (" + stats.getAiIgnoredSuccesses() + "/" + stats.getAiIgnoredTotal() + ")", normalFont));
+                document.add(new Paragraph("Strateški zaključak: ", boldFont));
 
-                if (followedRate > ignoredRate) {
-                    document.add(new Paragraph("Zaključak: Praćenje AI savjeta pokazalo se kao optimalna strategija u ovom potezu.", highlightFont));
-                } else if (ignoredRate > followedRate) {
-                    document.add(new Paragraph("Zaključak: Korisnik je pronašao bolju alternativu od predložene AI strategije.", highlightFont));
-                }
+                // DINAMIČKI IZRAČUN POVRATNE INFORMACIJE DIREKTNO U PDF-u
+                String feedbackMessage = determineDynamicFeedback(stats, monsterSum);
+                document.add(new Paragraph(" -> " + feedbackMessage, normalFont));
+
             } else {
-                document.add(new Paragraph("Statistički podaci za ovaj potez nisu dostupni.", dangerFont));
+                document.add(new Paragraph("Statistički podaci za ovaj potez nisu dostupni.", losFont));
             }
 
             document.add(new Paragraph("\n"));
             document.add(new Paragraph("--------------------------------------------------------------------------------------------------"));
 
-            // 4. PREGLED PLOČE (Korisno za pregled nakon End Phase-a)
-            document.add(new Paragraph("4. Trenutno Stanje Resursa", sectionFont));
-            document.add(new Paragraph("Igrač Životni bodovi: " + gameState.getPlayer().getLifePoints(), normalFont));
-            document.add(new Paragraph("Protivnik Životni bodovi: " + gameState.getOpponent().getLifePoints(), normalFont));
+            // 4. KONAČNO STANJE RESURSA
+            document.add(new Paragraph("4. Trenutno Stanje Životnih Bodova", sectionFont));
+            document.add(new Paragraph("Igrač LP: " + gameState.getPlayer().getLifePoints() + " | Protivnik LP: " + gameState.getOpponent().getLifePoints(), normalFont));
+            document.add(new Paragraph("Dnevnik Akcija i Poteza (Match Log)", sectionFont));
 
+            if (stats.getActionLog() != null && !stats.getActionLog().isEmpty()) {
+                for (String log : stats.getActionLog()) {
+                    document.add(new Paragraph(" " + log, normalFont));
+                }
+            } else {
+                document.add(new Paragraph(" • Nema zabilježenih akcija u ovom krugu.", normalFont));
+            }
+            document.add(new Paragraph("\n"));
             document.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return out.toByteArray();
+    }
+
+    // NOVA METODA: Ovdje na licu mjesta određujemo poruku na temelju trenutnog stanja
+    private String determineDynamicFeedback(TurnStatisticsDTO stats, int netAdvantage) {
+        if (stats.getAiIgnoredCount() > stats.getAiFollowedCount()) {
+            if (netAdvantage > 0) {
+                return "Vrhunska intuicija! Preuzeo si rizik unatoč AI upozorenjima i nadmudrio protivnika.";
+            } else if (netAdvantage < 0) {
+                return "Rizična igra se ovaj put nije isplatila. AI upozorenja su bila točna.";
+            } else {
+                return "Dosta riskantnih poteza, ali situacija na ploči je ostala izjednačena.";
+            }
+        } else if (stats.getAiFollowedCount() > stats.getAiIgnoredCount()) {
+            if (netAdvantage > 0) {
+                return "Pametna i taktička igra! Praćenje šansi se itekako isplatilo.";
+            } else if (netAdvantage < 0) {
+                return "Igrao si na sigurno, ali protivnik je imao sreće (ili skrivene asove).";
+            } else {
+                return "Strpljiva igra, čekaš pravu priliku za napad.";
+            }
+        } else {
+            if (netAdvantage > 0) {
+                return "Dobar potez, polako gradiš prednost na ploči.";
+            } else {
+                return "Relativno miran potez bez većih oscilacija.";
+            }
+        }
     }
 }

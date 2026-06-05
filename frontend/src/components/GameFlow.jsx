@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DeckSelection from './DeckSelection';
 import Customization from './Customization';
 import GameBoard from './board/GameBoard';
-import { gameAPI } from '../services/api.js'; // Uvozimo gameAPI
+import { gameAPI } from '../services/api.js';
 
 export default function GameFlow() {
     const [gameState, setGameState] = useState('selection');
@@ -18,14 +18,12 @@ export default function GameFlow() {
     const handleReadyForGame = async (finalBoard) => {
         setLoading(true);
         try {
-            // Slažemo payload za backend
             const payload = {
                 playerDeckName: playerDeck,
                 player: finalBoard.player,
                 opponent: finalBoard.opponent
             };
 
-            // Pozivamo naš centralizirani API
             const serverData = await gameAPI.startGame(payload);
 
             setBoardData(serverData);
@@ -71,7 +69,15 @@ export default function GameFlow() {
             )}
 
             {gameState === 'playing' && boardData && (
-                <GameBoard boardData={boardData} />
+                <GameBoard
+                    boardData={boardData}
+                    onReset={() => {
+                        // ISPRAVLJENO: Vraćamo na početni ekran i brišemo stare podatke
+                        setGameState('selection');
+                        setPlayerDeck(null);
+                        setBoardData(null);
+                    }}
+                />
             )}
         </div>
     );

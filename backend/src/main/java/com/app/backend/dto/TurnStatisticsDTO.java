@@ -8,60 +8,48 @@ import java.util.List;
 public class TurnStatisticsDTO {
 
     // Ekonomija čudovišta
-    private Integer monstersDestroyed = 0;
-    private Integer monstersLost = 0;
-    private Integer highAtkMonstersLost = 0; // Npr. čudovišta s 1500+ ATK
+    private int monstersGained = 0;               // Naša stvorena/prizvana čudovišta (+1)
+    private int monstersLostNormal = 0;           // Naša uništena s < 2000 ATK (-1)
+    private int monstersLostBoss = 0;             // Naša uništena s >= 2000 ATK (-2)
+    private int monstersDestroyedNormal = 0;       // Protivnička uništena s < 2000 ATK (+1)
+    private int monstersDestroyedBoss = 0;         // Protivnička uništena s >= 2000 ATK (+2)
 
-    // AI Usporedba
-    private Integer aiFollowedSuccesses = 0;
-    private Integer aiFollowedTotal = 0;
-    private Integer aiIgnoredSuccesses = 0;
-    private Integer aiIgnoredTotal = 0;
+    // AI Praćenje (Granica 85%)
+    private int aiFollowedCount = 0;              // Koliko puta smo poslušali AI (Aktivno ili Pasivno)
+    private int aiIgnoredCount = 0;               // Koliko puta nismo poslušali AI (Aktivno ili Pasivno)
+    private String turnFeedback;
 
-    // Logika poteza
-    private List<String> actionLog = new ArrayList<>();
+    // Dnevnik uništenja (npr. "Igračev 'Dark Magician' (2500 ATK) uništen je kartom 'Raigeki'")
+    private List<String> destructionLog = new ArrayList<>();
+    private java.util.List<String> actionLog = new java.util.ArrayList<>();
 
     public TurnStatisticsDTO() {}
 
-    // Pomoćna metoda za računanje "Sume čudovišta"
-    public int getMonsterSum() {
-        // Obična čudovišta gube 1 bod. Jaka čudovišta gube 2 boda.
-        // Kako 'monstersLost' sadrži UKUPAN broj izgubljenih čudovišta,
-        // obična čudovišta računamo tako da od ukupnih oduzmemo ona jaka.
-        int standardMonstersLost = this.monstersLost - this.highAtkMonstersLost;
-
-        int penalty = (standardMonstersLost * 1) + (this.highAtkMonstersLost * 2);
-
-        // Uništavanje protivničkih nosi +1
-        return this.monstersDestroyed - penalty;
-    }
-
-    public String getTurnVerdict() {
-        int sum = getMonsterSum();
-        if (sum > 0) {
-            return "POZITIVAN (Stjecanje prednosti na ploči)";
-        } else if (sum < 0) {
-            return "NEGATIVAN (Kritičan gubitak resursa)";
-        } else {
-            return "NEUTRALAN (Održavanje statusa quo)";
-        }
-    }
-
     // Getteri i Setteri
-    public Integer getMonstersDestroyed() { return monstersDestroyed; }
-    public void setMonstersDestroyed(Integer monstersDestroyed) { this.monstersDestroyed = monstersDestroyed; }
-    public Integer getMonstersLost() { return monstersLost; }
-    public void setMonstersLost(Integer monstersLost) { this.monstersLost = monstersLost; }
-    public Integer getHighAtkMonstersLost() { return highAtkMonstersLost; }
-    public void setHighAtkMonstersLost(Integer highAtkMonstersLost) { this.highAtkMonstersLost = highAtkMonstersLost; }
-    public Integer getAiFollowedSuccesses() { return aiFollowedSuccesses; }
-    public void setAiFollowedSuccesses(Integer aiFollowedSuccesses) { this.aiFollowedSuccesses = aiFollowedSuccesses; }
-    public Integer getAiFollowedTotal() { return aiFollowedTotal; }
-    public void setAiFollowedTotal(Integer aiFollowedTotal) { this.aiFollowedTotal = aiFollowedTotal; }
-    public Integer getAiIgnoredSuccesses() { return aiIgnoredSuccesses; }
-    public void setAiIgnoredSuccesses(Integer aiIgnoredSuccesses) { this.aiIgnoredSuccesses = aiIgnoredSuccesses; }
-    public Integer getAiIgnoredTotal() { return aiIgnoredTotal; }
-    public void setAiIgnoredTotal(Integer aiIgnoredTotal) { this.aiIgnoredTotal = aiIgnoredTotal; }
-    public List<String> getActionLog() { return actionLog; }
-    public void setActionLog(List<String> actionLog) { this.actionLog = actionLog; }
+    public int getMonstersGained() { return monstersGained; }
+    public void setMonstersGained(int monstersGained) { this.monstersGained = monstersGained; }
+    public int getMonstersLostNormal() { return monstersLostNormal; }
+    public void setMonstersLostNormal(int monstersLostNormal) { this.monstersLostNormal = monstersLostNormal; }
+    public int getMonstersLostBoss() { return monstersLostBoss; }
+    public void setMonstersLostBoss(int monstersLostBoss) { this.monstersLostBoss = monstersLostBoss; }
+    public int getMonstersDestroyedNormal() { return monstersDestroyedNormal; }
+    public void setMonstersDestroyedNormal(int monstersDestroyedNormal) { this.monstersDestroyedNormal = monstersDestroyedNormal; }
+    public int getMonstersDestroyedBoss() { return monstersDestroyedBoss; }
+    public void setMonstersDestroyedBoss(int monstersDestroyedBoss) { this.monstersDestroyedBoss = monstersDestroyedBoss; }
+    public int getAiFollowedCount() { return aiFollowedCount; }
+    public void setAiFollowedCount(int aiFollowedCount) { this.aiFollowedCount = aiFollowedCount; }
+    public int getAiIgnoredCount() { return aiIgnoredCount; }
+    public void setAiIgnoredCount(int aiIgnoredCount) { this.aiIgnoredCount = aiIgnoredCount; }
+    public List<String> getDestructionLog() { return destructionLog; }
+    public void setDestructionLog(List<String> destructionLog) { this.destructionLog = destructionLog; }
+    public String getTurnFeedback() { return turnFeedback; }
+    public void setTurnFeedback(String turnFeedback) { this.turnFeedback = turnFeedback; }
+    public java.util.List<String> getActionLog() { return actionLog; }
+    public void setActionLog(java.util.List<String> actionLog) { this.actionLog = actionLog; }
+
+    // Pomoćna metoda za lakše dodavanje zapisa o borbi/uništenju
+    public void addDestructionLog(String cijaKarta, String imeKarte, int atk, String sKojomKartom) {
+        this.destructionLog.add(String.format("• [%s] Čudovište '%s' (%d ATK) je uništeno pomoću karte '%s'.",
+                cijaKarta.toUpperCase(), imeKarte, atk, sKojomKartom));
+    }
 }

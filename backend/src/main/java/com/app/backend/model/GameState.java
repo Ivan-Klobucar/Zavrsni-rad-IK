@@ -14,6 +14,7 @@ public class GameState {
     private String currentPhase; // DP, SP, MP1, BP, MP2, EP
     private String turnOwner;    // "PLAYER" ili "OPPONENT"
     private TurnStatisticsDTO statistics;
+    private java.util.List<com.app.backend.dto.AiMoveSuggestionDTO> aiSuggestions = new java.util.ArrayList<>();
 
 
     public GameState() {
@@ -34,4 +35,6 @@ public class GameState {
     public void setTurnOwner(String turnOwner) { this.turnOwner = turnOwner; }
     public TurnStatisticsDTO getStatistics() { return statistics; }
     public void setStatistics(TurnStatisticsDTO statistics) { this.statistics = statistics; }
+    public java.util.List<com.app.backend.dto.AiMoveSuggestionDTO> getAiSuggestions() { return aiSuggestions; }
+    public void setAiSuggestions(java.util.List<com.app.backend.dto.AiMoveSuggestionDTO> aiSuggestions) { this.aiSuggestions = aiSuggestions; }
 }

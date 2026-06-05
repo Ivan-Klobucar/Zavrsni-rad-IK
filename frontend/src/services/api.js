@@ -129,6 +129,20 @@ export const gameAPI = {
         }
 
         return await response.blob();
+    },
+    resetGame: async () => {
+        const response = await fetch('http://localhost:8080/api/game/reset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Greška pri resetiranju igre s backenda.");
+        }
+
+        return await response.text();
     }
 };
 

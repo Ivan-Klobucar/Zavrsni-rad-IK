@@ -69,4 +69,9 @@ public class GameController {
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
+    @PostMapping("/reset")
+    public ResponseEntity<String> resetGame() {
+        gameService.resetGame();
+        return ResponseEntity.ok("Igra je resetirana.");
+    }
 }

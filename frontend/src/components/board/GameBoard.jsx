@@ -6,7 +6,7 @@ import InfoPanel from './InfoPanel';
 import PlayField from './PlayField';
 import GraveyardModal from './GraveyardModal';
 
-const GameBoard = ({ boardData: initialBoardData }) => {
+const GameBoard = ({ boardData: initialBoardData , onReset}) => {
     const [boardData, setBoardData] = useState(initialBoardData);
     const [hoveredCard, setHoveredCard] = useState(null);
     const [selectedHandCard, setSelectedHandCard] = useState(null);
@@ -112,6 +112,18 @@ const GameBoard = ({ boardData: initialBoardData }) => {
         } catch (error) { console.error(error); alert("Došlo je do greške pri dohvaćanju PDF-a s backenda!"); }
     };
 
+    const handleResetGame = async () => {
+        try {
+            await gameAPI.resetGame(); // Javi backendu da obriše igru
+            if (onReset) {
+                onReset(); // Pozovi funkciju roditelja koja gasi ekran s pločom
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Greška pri izlasku iz igre.");
+        }
+    };
+
     const canDoMainPhaseActions = ['MP1', 'MP2'].includes(currentPhase);
     const opponentTopGyCard = boardData.opponent.graveyard && boardData.opponent.graveyard.length > 0 ? boardData.opponent.graveyard[boardData.opponent.graveyard.length - 1] : null;
     const playerTopGyCard = boardData.player.graveyard && boardData.player.graveyard.length > 0 ? boardData.player.graveyard[boardData.player.graveyard.length - 1] : null;
@@ -124,6 +136,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                 canDoMainPhaseActions={canDoMainPhaseActions} isGameOver={isGameOver} attackingMonster={attackingMonster}
                 currentPhase={currentPhase} handleActionClick={handleActionClick} setSelectedHandCard={setSelectedHandCard}
                 setAttackingMonster={setAttackingMonster}
+                aiSuggestions={boardData.aiSuggestions}
             />
 
             <PlayField
@@ -133,6 +146,7 @@ const GameBoard = ({ boardData: initialBoardData }) => {
                 opponentTopGyCard={opponentTopGyCard} playerTopGyCard={playerTopGyCard} handlePlayerMonsterClick={handlePlayerMonsterClick}
                 canDoMainPhaseActions={canDoMainPhaseActions} setSelectedHandCard={setSelectedHandCard} selectedHandCard={selectedHandCard}
                 tributeState={tributeState} handleDownloadPDF={handleDownloadPDF}
+                handleResetGame={onReset}
             />
 
             <GraveyardModal

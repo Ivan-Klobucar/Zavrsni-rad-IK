@@ -1,6 +1,8 @@
 package com.app.backend.service;
 
 import java.util.Objects;
+
+import com.app.backend.dto.AiMoveSuggestionDTO;
 import com.app.backend.dto.BoardSetupDTO;
 import com.app.backend.dto.CardDTO;
 import com.app.backend.dto.TurnStatisticsDTO;
@@ -23,8 +25,6 @@ public class GameService {
 
     public GameState initializeGame(BoardSetupDTO setup) {
         this.currentGame = new GameState();
-
-        // Inicijalizacija objekta za statistiku!
         this.currentGame.setStatistics(new TurnStatisticsDTO());
 
         // 1. Postavi polje iz kastomizacije
@@ -55,37 +55,52 @@ public class GameService {
         return this.currentGame;
     }
 
-    // --- POMOĆNE METODE ZA STATISTIKU ---
+    // --- NOVA STATISTIČKA LOGIKA ---
 
     private void recordPlayerMonsterLost(CardDTO monster, String reason) {
         if (monster == null) return;
         TurnStatisticsDTO stats = currentGame.getStatistics();
+        int atk = monster.getCardAttack() != null ? monster.getCardAttack() : 0;
 
-        stats.setMonstersLost(stats.getMonstersLost() + 1);
-
-        // OVDJE JE PROMJENA: Provjeravamo je li ATK strogo veći od 2000
-        if (monster.getCardAttack() != null && monster.getCardAttack() > 2000) {
-            stats.setHighAtkMonstersLost(stats.getHighAtkMonstersLost() + 1);
+        if (atk >= 2000) {
+            stats.setMonstersLostBoss(stats.getMonstersLostBoss() + 1);
+        } else {
+            stats.setMonstersLostNormal(stats.getMonstersLostNormal() + 1);
         }
 
-        stats.getActionLog().add("GUBITAK: " + monster.getCardName() + " (" + reason + ")");
+        stats.getDestructionLog().add(String.format("• [IGRAČ] Čudovište '%s' (%d ATK) je uništeno. (Uzrok: %s)", monster.getCardName(), atk, reason));
     }
 
     private void recordOpponentMonsterDestroyed(CardDTO monster, String reason) {
         if (monster == null) return;
         TurnStatisticsDTO stats = currentGame.getStatistics();
-        stats.setMonstersDestroyed(stats.getMonstersDestroyed() + 1);
-        stats.getActionLog().add("USPJEH: Uništeno protivničko čudovište " + monster.getCardName() + " (" + reason + ")");
+        int atk = monster.getCardAttack() != null ? monster.getCardAttack() : 0;
+
+        if (atk >= 2000) {
+            stats.setMonstersDestroyedBoss(stats.getMonstersDestroyedBoss() + 1);
+        } else {
+            stats.setMonstersDestroyedNormal(stats.getMonstersDestroyedNormal() + 1);
+        }
+
+        stats.getDestructionLog().add(String.format("• [PROTIVNIK] Čudovište '%s' (%d ATK) je uništeno. (Uzrok: %s)", monster.getCardName(), atk, reason));
     }
 
-    private void recordAiDecision(boolean followedAI, boolean isSuccess) {
+    private void recordAiDecision(double successProbability, boolean userExecutedMove) {
         TurnStatisticsDTO stats = currentGame.getStatistics();
-        if (followedAI) {
-            stats.setAiFollowedTotal(stats.getAiFollowedTotal() + 1);
-            if (isSuccess) stats.setAiFollowedSuccesses(stats.getAiFollowedSuccesses() + 1);
+
+        if (successProbability >= 85.0) {
+            if (userExecutedMove) {
+                stats.setAiFollowedCount(stats.getAiFollowedCount() + 1); // Aktivan dobar potez
+            }
+            // Ako je userExecutedMove false, a šansa je > 85%, NEĆEMO mu dati negativan bod.
+            // Igrač vjerojatno ima taktički razlog (npr. protivnik ima jače čudovište, pa se ne isplati napadati).
         } else {
-            stats.setAiIgnoredTotal(stats.getAiIgnoredTotal() + 1);
-            if (isSuccess) stats.setAiIgnoredSuccesses(stats.getAiIgnoredSuccesses() + 1);
+            // Šansa manja od 85% (opasnost!)
+            if (!userExecutedMove) {
+                stats.setAiFollowedCount(stats.getAiFollowedCount() + 1); // PASIVNO PRATIO (Pametno odustao)
+            } else {
+                stats.setAiIgnoredCount(stats.getAiIgnoredCount() + 1);   // Ušao u prevelik rizik (ignorirao opasnost)
+            }
         }
     }
 
@@ -189,7 +204,7 @@ public class GameService {
     public GameState playCard(Long cardId, String action, List<Long> tributes) {
         if (currentGame == null) throw new RuntimeException("Igra nije nađena!");
         PlayerState p = currentGame.getPlayer();
-
+        verifyUserCompliance(cardId, action);
         CardDTO cardToPlay = p.getHand().stream()
                 .filter(Objects::nonNull)
                 .filter(c -> c.getCardId().equals(cardId))
@@ -200,9 +215,9 @@ public class GameService {
             if (p.isHasNormalSummonedThisTurn()) throw new RuntimeException("Već si iskoristio Normal Summon ovog poteza!");
             if (!currentGame.getCurrentPhase().equals("MP1") && !currentGame.getCurrentPhase().equals("MP2")) throw new RuntimeException("Summon je moguć samo u Main fazi!");
 
-            // AI Statistika za Summon (prag od 50%)
+            // AI Logika: Bilježimo pokušaj
             double summonChance = calculateSummonSuccessRate(currentGame);
-            boolean followedAI = summonChance >= 85.0;
+            recordAiDecision(summonChance, true);
 
             int cost = cardToPlay.getCardCost() != null ? cardToPlay.getCardCost() : 0;
             int requiredTributes = 0;
@@ -224,7 +239,7 @@ public class GameService {
                     p.getMonsterZone().set(tIndex, null);
                     sendToGraveyard(currentGame, tributeMonster);
 
-                    recordPlayerMonsterLost(tributeMonster, "Žrtva za prizivanje");
+                    recordPlayerMonsterLost(tributeMonster, "Žrtva za prizivanje ('" + cardToPlay.getCardName() + "')");
                 }
             }
 
@@ -233,41 +248,36 @@ public class GameService {
             placeCardInZone(p.getMonsterZone(), cardToPlay);
             p.setHasNormalSummonedThisTurn(true);
 
-            boolean destroyedByTrap = checkOpponentSummonReactions(currentGame, cardToPlay);
+            // Bilježimo dobiveno čudovište na polju
+            currentGame.getStatistics().setMonstersGained(currentGame.getStatistics().getMonstersGained() + 1);
 
-            if (destroyedByTrap) {
-                recordAiDecision(followedAI, false); // Prizivanje je propalo
-            } else {
-                recordAiDecision(followedAI, true);  // Prizivanje uspjelo
-                currentGame.getStatistics().getActionLog().add("Korisnik je uspješno prizvao: " + cardToPlay.getCardName());
-            }
-
+            // Ako zamka pukne, izbrisat će ga i zabilježiti kao izgubljeno
+            checkOpponentSummonReactions(currentGame, cardToPlay);
+            currentGame.getStatistics().getActionLog().add("[KORISNIK] Prizvana karta: '" + cardToPlay.getCardName() + "'.");
         }
         else if (action.equals("SET") && (cardToPlay.getCardType().equals("SPELL") || cardToPlay.getCardType().equals("TRAP"))) {
             p.getHand().remove(cardToPlay);
             cardToPlay.setFacedown(true);
             placeCardInZone(p.getSpellTrapZone(), cardToPlay);
-            currentGame.getStatistics().getActionLog().add("Korisnik je postavio kartu licem prema dolje.");
+            currentGame.getStatistics().getActionLog().add("[KORISNIK] Karta postavljena licem prema dolje (SET).");
         }
         else if (action.equals("ACTIVATE") && cardToPlay.getCardType().equals("SPELL")) {
             if (!currentGame.getCurrentPhase().equals("MP1") && !currentGame.getCurrentPhase().equals("MP2")) throw new RuntimeException("Aktivacija magija moguća samo u Main fazi!");
 
             p.getHand().remove(cardToPlay);
             cardToPlay.setFacedown(false);
-
             String spellName = cardToPlay.getCardName();
-            currentGame.getStatistics().getActionLog().add("Korisnik je aktivirao magiju: " + spellName);
 
             if (spellName.equalsIgnoreCase("Big Bang")) {
                 p.getMonsterZone().stream().filter(Objects::nonNull).forEach(m -> {
                     p.getGraveyard().add(m);
-                    recordPlayerMonsterLost(m, "Uništeno vlastitim Big Bangom");
+                    recordPlayerMonsterLost(m, "Vlastita magija 'Big Bang'");
                 });
                 Collections.fill(p.getMonsterZone(), null);
 
                 currentGame.getOpponent().getMonsterZone().stream().filter(Objects::nonNull).forEach(m -> {
                     currentGame.getOpponent().getGraveyard().add(m);
-                    recordOpponentMonsterDestroyed(m, "Uništeno Big Bangom");
+                    recordOpponentMonsterDestroyed(m, "Magija 'Big Bang'");
                 });
                 Collections.fill(currentGame.getOpponent().getMonsterZone(), null);
             }
@@ -290,7 +300,8 @@ public class GameService {
 
                 targetMonster.setFacedown(false);
                 placeCardInZone(p.getMonsterZone(), targetMonster);
-                currentGame.getStatistics().getActionLog().add("Uspješno oživljeno čudovište: " + targetMonster.getCardName());
+
+                currentGame.getStatistics().setMonstersGained(currentGame.getStatistics().getMonstersGained() + 1);
             }
             else if (spellName.equalsIgnoreCase("Chaotic Orb") || spellName.equalsIgnoreCase("Dragons Call")) {
                 boolean hasRequiredMonster = p.getMonsterZone().stream()
@@ -313,11 +324,12 @@ public class GameService {
                 currentGame.getOpponent().getMonsterZone().set(tIndex, null);
                 sendToGraveyard(currentGame, targetMonster);
 
-                recordOpponentMonsterDestroyed(targetMonster, "Uništeno magijom");
+                recordOpponentMonsterDestroyed(targetMonster, "Magija '" + spellName + "'");
             }
 
             p.getHand().remove(cardToPlay);
             sendToGraveyard(currentGame, cardToPlay);
+            currentGame.getStatistics().getActionLog().add("[KORISNIK] Aktivirana magija: '" + cardToPlay.getCardName() + "'.");
         } else {
             throw new RuntimeException("Nepoznata ili ilegalna akcija!");
         }
@@ -328,6 +340,8 @@ public class GameService {
     public GameState attack(Long attackerId, Long targetId) {
         if (currentGame == null) throw new RuntimeException("Igra nije pokrenuta!");
         if (!currentGame.getCurrentPhase().equals("BP")) throw new RuntimeException("Napad samo u Battle fazi!");
+
+        verifyUserCompliance(attackerId, "ATTACK");
 
         CardDTO attacker = currentGame.getPlayer().getMonsterZone().stream()
                 .filter(c -> c != null && c.getCardId().equals(attackerId))
@@ -340,19 +354,17 @@ public class GameService {
 
         // AI Statistika za Napad
         double attackChance = calculateAttackSuccessRate(currentGame);
-        boolean followedAI = attackChance >= 85.0;
+        recordAiDecision(attackChance, true); // Zabilježi da se napad AKTIVNO dogodio
 
         // Provjera zamki
         if (checkOpponentAttackReactions(currentGame, attacker)) {
-            recordAiDecision(followedAI, false); // Napad zaustavljen zamkom = neuspjeh
             enrichHandWithProbabilities(currentGame);
             return currentGame;
         }
 
         if (targetId == null) {
             currentGame.getOpponent().setLifePoints(currentGame.getOpponent().getLifePoints() - attacker.getCardAttack());
-            currentGame.getStatistics().getActionLog().add("Direktan napad! Nanesena šteta: " + attacker.getCardAttack());
-            recordAiDecision(followedAI, true);
+            currentGame.getStatistics().getActionLog().add("[KORISNIK] Direktan napad s: '" + attacker.getCardName() + "'.");
         } else {
             CardDTO target = currentGame.getOpponent().getMonsterZone().stream()
                     .filter(c -> c != null && c.getCardId().equals(targetId))
@@ -368,8 +380,7 @@ public class GameService {
                 currentGame.getOpponent().getMonsterZone().set(targetIndex, null);
                 currentGame.getOpponent().getGraveyard().add(target);
 
-                recordOpponentMonsterDestroyed(target, "Uništeno u borbi");
-                recordAiDecision(followedAI, true); // Borba uspješna
+                recordOpponentMonsterDestroyed(target, "Borba (Napad čudovištem '" + attacker.getCardName() + "')");
 
             } else if (atk < def) {
                 currentGame.getPlayer().setLifePoints(currentGame.getPlayer().getLifePoints() - (def - atk));
@@ -377,8 +388,7 @@ public class GameService {
                 currentGame.getPlayer().getMonsterZone().set(attackerIndex, null);
                 currentGame.getPlayer().getGraveyard().add(attacker);
 
-                recordPlayerMonsterLost(attacker, "Uništeno napadom na jače čudovište");
-                recordAiDecision(followedAI, false); // Borba neuspješna
+                recordPlayerMonsterLost(attacker, "Borba protiv jačeg čudovišta ('" + target.getCardName() + "')");
 
             } else {
                 int targetIndex = currentGame.getOpponent().getMonsterZone().indexOf(target);
@@ -389,10 +399,10 @@ public class GameService {
                 currentGame.getPlayer().getMonsterZone().set(attackerIndex, null);
                 currentGame.getPlayer().getGraveyard().add(attacker);
 
-                recordOpponentMonsterDestroyed(target, "Obostrano uništenje");
-                recordPlayerMonsterLost(attacker, "Obostrano uništenje");
-                recordAiDecision(followedAI, false); // Tehnički gubitak resursa
+                recordOpponentMonsterDestroyed(target, "Obostrano uništenje čudovištem '" + attacker.getCardName() + "'");
+                recordPlayerMonsterLost(attacker, "Obostrano uništenje u borbi s '" + target.getCardName() + "'");
             }
+            currentGame.getStatistics().getActionLog().add("[KORISNIK] '" + attacker.getCardName() + "' napada protivničku kartu.");
         }
         attacker.setHasAttackedThisTurn(true);
         enrichHandWithProbabilities(currentGame);
@@ -416,7 +426,7 @@ public class GameService {
                 game.getPlayer().getMonsterZone().set(monsterIndex, null);
                 game.getPlayer().getGraveyard().add(summonedCard);
 
-                recordPlayerMonsterLost(summonedCard, "Uništeno zamkom Bear Trap");
+                recordPlayerMonsterLost(summonedCard, "Zamka 'Bear Trap'");
                 return true;
             }
         }
@@ -435,12 +445,11 @@ public class GameService {
             stZone.set(stZone.indexOf(trap), null);
             sendToGraveyard(game, trap);
 
-            game.getStatistics().getActionLog().add("KATASTROFA: Protivnik je aktivirao An Ambush!");
             game.getPlayer().getMonsterZone().stream()
                     .filter(Objects::nonNull)
                     .forEach(c -> {
                         sendToGraveyard(game, c);
-                        recordPlayerMonsterLost(c, "Uništeno zamkom An Ambush");
+                        recordPlayerMonsterLost(c, "Zamka 'An Ambush'");
                     });
             Collections.fill(game.getPlayer().getMonsterZone(), null);
             return true;
@@ -459,7 +468,7 @@ public class GameService {
             game.getPlayer().getMonsterZone().set(attackerIndex, null);
             sendToGraveyard(game, attacker);
 
-            recordPlayerMonsterLost(attacker, "Uništeno zamkom Self-Destruct Sword");
+            recordPlayerMonsterLost(attacker, "Zamka 'Self-Destruct Sword'");
             return true;
         }
 
@@ -477,24 +486,20 @@ public class GameService {
                     .filter(Objects::nonNull)
                     .anyMatch(c -> c.getCardType().equals("MONSTER"));
             boolean canSummon = !currentGame.getPlayer().isHasNormalSummonedThisTurn() && hasMonsterInHand;
-            double summonChance = calculateSummonSuccessRate(currentGame);
 
-            // Ako je mogao prizvati, ali je šansa bila loša (<85%), a on NIJE prizvao
-            if (canSummon && summonChance < 85.0) {
-                recordAiDecision(true, true); // Poslušao AI = Da, Uspjeh = Da (sačuvao je resurs)
-                currentGame.getStatistics().getActionLog().add("PAMETAN POTEZ: Korisnik se suzdržao od rizičnog prizivanja.");
+            if (canSummon) {
+                double summonChance = calculateSummonSuccessRate(currentGame);
+                recordAiDecision(summonChance, false); // Nije odigrao potez, bilježimo pasivnu odluku
             }
 
             // --- 2. PROVJERA ZA PAMETNO SUZDRŽAVANJE OD NAPADA ---
             boolean hasReadyMonsterOnField = currentGame.getPlayer().getMonsterZone().stream()
                     .filter(Objects::nonNull)
                     .anyMatch(c -> !c.isHasAttackedThisTurn());
-            double attackChance = calculateAttackSuccessRate(currentGame);
 
-            // Ako je imao spremno čudovište, šansa je bila loša (<85%), a on NIJE napao
-            if (hasReadyMonsterOnField && attackChance < 85.0) {
-                recordAiDecision(true, true); // Poslušao AI = Da, Uspjeh = Da (izbjegao je zamku)
-                currentGame.getStatistics().getActionLog().add("PAMETAN POTEZ: Korisnik se suzdržao od rizičnog napada.");
+            if (hasReadyMonsterOnField) {
+                double attackChance = calculateAttackSuccessRate(currentGame);
+                recordAiDecision(attackChance, false); // Nije odigrao napad, bilježimo pasivnu odluku
             }
 
             // --- RESETIRANJE VARIJABLI ZA KRAJ KRUGA ---
@@ -612,6 +617,86 @@ public class GameService {
                     card.setAttackSuccessProb(attackChance);
                 }
             }
+        }
+        game.setAiSuggestions(generateAiSuggestions(game));
+    }
+    public void resetGame() {
+        this.currentGame = null;
+    }
+    private List<AiMoveSuggestionDTO> generateAiSuggestions(GameState game) {
+        List<AiMoveSuggestionDTO> allPossibleMoves = new ArrayList<>();
+        if (game == null) return allPossibleMoves;
+
+        String phase = game.getCurrentPhase();
+
+        // 1. Prikupljamo sve teoretski moguće poteze u trenutnoj fazi
+        if ("MP1".equals(phase) || "MP2".equals(phase)) {
+            boolean canSummon = !game.getPlayer().isHasNormalSummonedThisTurn();
+
+            if (game.getPlayer().getHand() != null) {
+                for (CardDTO card : game.getPlayer().getHand()) {
+                    if (card == null) continue;
+
+                    if ("SPELL".equals(card.getCardType()) || "TRAP".equals(card.getCardType())) {
+                        double chance = 100.0; // Aktivacija magije ima 100% uspješnosti
+                        allPossibleMoves.add(new AiMoveSuggestionDTO(card.getCardId(), card.getCardName(), "ACTIVATE", chance));
+                    }
+
+                    if ("MONSTER".equals(card.getCardType()) && canSummon) {
+                        double chance = calculateSummonSuccessRate(game); // Tvoja računica za prizivanje
+                        allPossibleMoves.add(new AiMoveSuggestionDTO(card.getCardId(), card.getCardName(), "SUMMON", chance));
+                    }
+                }
+            }
+        } else if ("BP".equals(phase)) {
+            if (game.getPlayer().getMonsterZone() != null) {
+                for (CardDTO monster : game.getPlayer().getMonsterZone()) {
+                    if (monster != null && !monster.isHasAttackedThisTurn()) {
+                        double chance = calculateAttackSuccessRate(game); // Tvoja računica za napad
+                        allPossibleMoves.add(new AiMoveSuggestionDTO(monster.getCardId(), monster.getCardName(), "ATTACK", chance));
+                    }
+                }
+            }
+        }
+
+        // 2. Pronalazimo koliki je MAKSIMALNI postotak među svim mogućim potezima
+        double maxChance = -1.0;
+        for (AiMoveSuggestionDTO move : allPossibleMoves) {
+            if (move.getSuccessProb() > maxChance) {
+                maxChance = move.getSuccessProb();
+            }
+        }
+
+        // 3. Filtriramo i ostavljamo SAMO karte koje imaju taj maksimalni postotak
+        List<AiMoveSuggestionDTO> absoluteBestMoves = new ArrayList<>();
+        if (maxChance >= 0) {
+            for (AiMoveSuggestionDTO move : allPossibleMoves) {
+                // Ako je postotak karte jednak maksimalnom, dodaj je na listu predloženih
+                if (Math.abs(move.getSuccessProb() - maxChance) < 0.01) {
+                    absoluteBestMoves.add(move);
+                }
+            }
+        }
+
+        return absoluteBestMoves;
+    }
+
+    // 3. Provjera i bilježenje odvajanja od AI-ja
+    private void verifyUserCompliance(Long cardId, String action) {
+        if (currentGame == null || currentGame.getStatistics() == null) return;
+        TurnStatisticsDTO stats = currentGame.getStatistics();
+
+        if (currentGame.getAiSuggestions() == null || currentGame.getAiSuggestions().isEmpty()) return;
+
+        boolean followedAi = currentGame.getAiSuggestions().stream()
+                .anyMatch(s -> s.getCardId().equals(cardId) && s.getAction().equalsIgnoreCase(action));
+
+        if (followedAi) {
+            stats.setAiFollowedCount(stats.getAiFollowedCount() + 1);
+            stats.getActionLog().add("• [AI USKLAĐENOST] Korisnik je pratio optimalan savjet za akciju: " + action);
+        } else {
+            stats.setAiIgnoredCount(stats.getAiIgnoredCount() + 1);
+            stats.getActionLog().add("• [AI ODVAJANJE] Korisnik je ignorirao AI i odigrao potez: " + action);
         }
     }
 }

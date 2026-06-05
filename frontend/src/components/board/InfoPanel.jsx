@@ -11,13 +11,15 @@ const getProbabilityStyle = (prob) => {
     return { padding: '10px 8px', backgroundColor: bgColor, color: color, fontWeight: 'bold', fontSize: '13px', borderRadius: '4px', minWidth: '45px', textAlign: 'center', border: '1px solid rgba(0,0,0,0.5)', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.2)' };
 };
 
-const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhaseActions, isGameOver, attackingMonster, currentPhase, handleActionClick, setSelectedHandCard, setAttackingMonster }) => {
+// DODANO: aiSuggestions u props
+const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhaseActions, isGameOver, attackingMonster, currentPhase, handleActionClick, setSelectedHandCard, setAttackingMonster, aiSuggestions }) => {
     return (
         <div style={{ width: '25%', minWidth: '250px', maxWidth: '350px', padding: '20px', borderRight: '2px solid #444', display: 'flex', flexDirection: 'column', position: 'relative', overflowY: 'auto' }}>
             <h2 style={{ textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '10px', fontSize: 'clamp(16px, 1.5vw, 24px)' }}>Detalji Karte</h2>
 
+            {/* DETALJI KARTE */}
             {selectedHandCard || hoveredCard ? (
-                <div style={{ marginBottom: '150px' }}>
+                <div style={{ marginBottom: '20px' }}>
                     <img src={`${BACKEND_URL}${(selectedHandCard || hoveredCard).imageUrl}`} alt="preview" style={{ width: '100%', borderRadius: '8px', marginBottom: '15px', boxShadow: '0 4px 8px rgba(0,0,0,0.5)' }} />
                     <h3 style={{ margin: '0 0 10px 0', color: '#e5a822' }}>{(selectedHandCard || hoveredCard).cardName}</h3>
                     <p style={{ margin: '5px 0' }}><b>Tip:</b> {(selectedHandCard || hoveredCard).cardType}</p>
@@ -25,10 +27,33 @@ const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhase
                 </div>
             ) : <p style={{ color: '#888', textAlign: 'center', marginTop: '50px' }}>Prijeđi mišem preko polja.</p>}
 
+            {/* AI SAVJETNIK - PRIKAZUJE SE KADA IGRA TRAJE */}
+            {!isGameOver && aiSuggestions && aiSuggestions.length > 0 && (
+                <div style={{ marginBottom: '160px', padding: '15px', backgroundColor: '#161616', border: '1px solid #444', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+                    <h3 style={{ color: '#00ffff', margin: '0 0 10px 0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', textTransform: 'uppercase' }}>
+                        Preporuka Poteza
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <p style={{ fontSize: '12px', color: '#aaa', margin: '0 0 5px 0' }}>
+                            Najveća šansa uspjeha: <b style={{color: '#00ff00'}}>{aiSuggestions[0].successProb}%</b>
+                        </p>
+
+                        {aiSuggestions.map((potez, index) => (
+                            <div key={index} style={{ padding: '8px', backgroundColor: '#222', borderRadius: '6px', borderLeft: '4px solid #00ff00', fontSize: '13px' }}>
+                                <div style={{ fontWeight: 'bold', color: '#fff' }}>{potez.cardName}</div>
+                                <div style={{ fontSize: '11px', color: '#e5a822', marginTop: '2px', fontWeight: 'bold' }}>
+                                    Akcija: <span style={{ textTransform: 'uppercase' }}>{potez.action}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* IZBORNIK AKCIJA */}
             {selectedHandCard && !tributeState.active && canDoMainPhaseActions && !isGameOver && (
                 <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', backgroundColor: '#222', padding: '15px', borderRadius: '8px', border: '1px solid #e5a822' }}>
-                    <h4 style={{ margin: '0 0 10px 0', color: '#00ffff', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ AI Analiza Poteza ⚡</span></h4>
+                    <h4 style={{ margin: '0 0 10px 0', color: '#00ffff', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ Izvrši Akciju ⚡</span></h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {selectedHandCard.cardType === 'MONSTER' && (
                             <div style={actionRowStyle}>
@@ -56,7 +81,7 @@ const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhase
             {/* IZBORNIK ZA NAPAD */}
             {attackingMonster && currentPhase === 'BP' && !isGameOver && (
                 <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', backgroundColor: '#222', padding: '15px', borderRadius: '8px', border: '1px solid red' }}>
-                    <h4 style={{ margin: '0 0 10px 0', color: 'red', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ AI Analiza Napada ⚡</span></h4>
+                    <h4 style={{ margin: '0 0 10px 0', color: 'red', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ Potvrda Napada ⚡</span></h4>
                     <p style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', marginBottom: '10px' }}>Odaberi metu na protivničkom polju za napad.</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={actionRowStyle}>
