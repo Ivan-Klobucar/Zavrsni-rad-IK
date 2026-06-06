@@ -4,6 +4,7 @@ import com.app.backend.dto.CardDTO;
 import com.app.backend.dto.TurnStatisticsDTO;
 import com.app.backend.model.GameState;
 import org.openpdf.text.*;
+import org.openpdf.text.pdf.BaseFont;
 import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfWriter;
@@ -25,19 +26,27 @@ public class StatisticsPdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // Definiranje fontova i boja za dinamičke izvještaje
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Font sectionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
-            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
-            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+            // 1. KLJUČNO: Govorimo sustavu da učita fontove s računala (Windows/Mac)
+            FontFactory.registerDirectories();
 
-            // Boje za ocjene
-            Font uspjehFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, new Color(0, 150, 0));
-            Font losFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, Color.RED);
-            Font pasivanFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Font.NORMAL, Color.BLUE);
+            // Postavke za naša slova (Unicode i ugrađivanje fonta u PDF)
+            String fontName = "Arial";
+            String encoding = BaseFont.IDENTITY_H;
+            boolean embedded = BaseFont.EMBEDDED;
+
+            // 2. Definiranje Arial fontova s podrškom za č, ć, đ, š, ž
+            Font titleFont = FontFactory.getFont(fontName, encoding, embedded, 18, Font.BOLD);
+            Font sectionFont = FontFactory.getFont(fontName, encoding, embedded, 14, Font.BOLD);
+            Font normalFont = FontFactory.getFont(fontName, encoding, embedded, 11, Font.NORMAL);
+            Font boldFont = FontFactory.getFont(fontName, encoding, embedded, 11, Font.BOLD);
+
+            // Boje za ocjene (sada koriste Arial Bold)
+            Font uspjehFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, new Color(0, 150, 0));
+            Font losFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, Color.RED);
+            Font pasivanFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, Color.BLUE);
 
             // NASLOV
-            Paragraph title = new Paragraph("PROBABILISTICKA ANALIZA I EVALUACIJA RESURSA", titleFont);
+            Paragraph title = new Paragraph("PROBABILISTIČKA ANALIZA I EVALUACIJA RESURSA", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
             document.add(new Paragraph("\n"));
@@ -46,7 +55,7 @@ public class StatisticsPdfService {
             if (stats != null) {
 
                 // 1. EKONOMIJA ČUDOVIŠTA (Weighted Counter)
-                document.add(new Paragraph("1. Ekonomska Bilanca Čudovišta na Ploči", sectionFont));
+                document.add(new Paragraph("1. Ekonomski Balans Čudovišta na Ploči", sectionFont));
                 document.add(new Paragraph(" • Dobivena vlastita čudovišta: +" + stats.getMonstersGained(), normalFont));
                 document.add(new Paragraph(" • Izgubljena vlastita čudovišta (<2000 ATK): -" + stats.getMonstersLostNormal(), normalFont));
                 document.add(new Paragraph(" • Izgubljena kapitalna čudovišta (>=2000 ATK): -" + (stats.getMonstersLostBoss() * 2) + " (Količina: " + stats.getMonstersLostBoss() + ")", normalFont));
@@ -65,7 +74,7 @@ public class StatisticsPdfService {
 
                 // Ispis različitih stanja ovisno o sumi
                 Paragraph verdictPara = new Paragraph();
-                verdictPara.add(new Chunk("Ocjena taktičkog poteza: "));
+                verdictPara.add(new Chunk("Ocjena taktičkog poteza: ", normalFont));
                 if (monsterSum > 0) {
                     verdictPara.add(new Chunk("USPJEŠAN POTEZ (Ostvarena je prednost u resursima na ploči)", uspjehFont));
                 } else if (monsterSum < 0) {

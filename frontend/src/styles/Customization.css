@@ -1,0 +1,56 @@
+/* --- Customization.css --- */
+
+.deck-selection-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #111;
+    color: white;
+    font-family: sans-serif;
+}
+
+.deck-title {
+    font-size: clamp(3rem, 5vw, 5rem);
+    color: #e5a822;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+    margin: 0 0 10px 0;
+    text-shadow: 0 0 15px rgba(229, 168, 34, 0.4);
+}
+
+.deck-subtitle {
+    font-size: 1.2rem;
+    color: #aaa;
+    margin-bottom: 60px;
+    font-weight: normal;
+}
+
+.deck-btn-group {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.deck-btn {
+    padding: 20px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    background-color: #e5a822;
+    color: black;
+    border: 2px solid #222;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Hover efekt prebačen u čisti CSS */
+.deck-btn:hover {
+    background-color: #fdd15f;
+    border-color: white;
+    box-shadow: 0 0 20px rgba(229, 168, 34, 0.6);
+    transform: translateY(-5px) scale(1.05);
+}

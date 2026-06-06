@@ -13,19 +13,11 @@ const api = axios.create({
     }
 });
 
-// 3. Centralizirane metode za tvoj projekt
 export const deckAPI = {
-    // Dohvaća deck po imenu (npr. 'Mugi' ili 'Saiba')
     getByName: async (name) => {
         const response = await api.get(`/decks/${name}`);
         return response.data; // Axios sprema podatke u .data
     },
-
-    // Kasnije možemo dodati ostale rute
-    saveGameState: async (state) => {
-        const response = await api.post('/game-states', state);
-        return response.data;
-    }
 };
 
 // Pomoćna funkcija za sigurno spajanje URL-a
@@ -33,7 +25,7 @@ const cleanUrl = (url) => url.replace(/([^:]\/)\/+/g, "$1");
 
 export const gameAPI = {
     startGame: async (payload) => {
-        // Koristimo cleanUrl da spriječimo duple kose crte (//)
+
         const targetUrl = cleanUrl(`${BACKEND_URL}/api/game/start`);
 
         const response = await fetch(targetUrl, {
@@ -115,7 +107,7 @@ export const gameAPI = {
     },
 
     downloadStatistics: async (boardData) => {
-        const response = await fetch('http://localhost:8080/api/game/statistics/download', {
+        const response = await fetch(cleanUrl(`${BACKEND_URL}/api/game/statistics/download`), {
             method: 'POST', // Promijenjeno u POST
             headers: {
                 'Accept': 'application/pdf',
@@ -131,7 +123,7 @@ export const gameAPI = {
         return await response.blob();
     },
     resetGame: async () => {
-        const response = await fetch('http://localhost:8080/api/game/reset', {
+        const response = await fetch(cleanUrl(`${BACKEND_URL}/api/game/reset`), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

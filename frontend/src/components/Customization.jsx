@@ -214,7 +214,7 @@ const Customization = ({ selectedDeck, onReady }) => {
                     onClick={() => setGyModeActive(!gyModeActive)}
                     style={{ width: '100%', padding: '12px', marginBottom: '15px', backgroundColor: gyModeActive ? 'darkred' : '#333', color: 'white', border: gyModeActive ? '2px solid red' : '1px solid #555', cursor: 'pointer', fontWeight: 'bold', borderRadius: '5px', transition: '0.3s' }}
                 >
-                    {gyModeActive ? '🔥 GY MODE UKLJUČEN (Klikni za prekid)' : '⚰️ Uključi GY Mode (Slanje direktno u GY)'}
+                    {gyModeActive ? 'GY MODE UKLJUČEN' : 'Uključi GY Mode (Slanje direktno u GY)'}
                 </button>
 
                 <h3 style={{ textAlign: 'center', color: '#e5a822' }}>{activeDeck.deckName} Deck</h3>

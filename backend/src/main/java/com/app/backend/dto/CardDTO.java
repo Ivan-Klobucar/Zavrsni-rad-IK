@@ -14,12 +14,11 @@ public class CardDTO {
     private boolean facedown;
     private String originalOwner;
     private boolean hasAttackedThisTurn;
-    private Double summonSuccessProb; // Može biti null za Spell/Trap
-    private Double activateSuccessProb; // Za magije, trenutno 100.0
+    private Double summonSuccessProb;
+    private Double activateSuccessProb;
     private Double attackSuccessProb;
 
     public CardDTO() {}
-    // Getteri i Setteri
     public Long getCardId() { return cardId; }
     public void setCardId(Long cardId) { this.cardId = cardId; }
     public String getCardName() { return cardName; }

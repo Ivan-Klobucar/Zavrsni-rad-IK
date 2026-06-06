@@ -21,12 +21,3 @@ CREATE TABLE deck_cards (
                             quantity INT DEFAULT 1,
                             PRIMARY KEY (deck_id, card_id)
 );
-
-CREATE TABLE moves (
-                       move_id BIGSERIAL PRIMARY KEY,
-                       action_type VARCHAR(100),
-                       source_card VARCHAR(255),
-                       target VARCHAR(255),
-                       probability DOUBLE PRECISION,
-                       score DOUBLE PRECISION
-);
