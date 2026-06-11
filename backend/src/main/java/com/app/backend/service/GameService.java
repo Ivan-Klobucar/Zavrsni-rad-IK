@@ -620,6 +620,7 @@ public class GameService {
         }
         game.setAiSuggestions(generateAiSuggestions(game));
     }
+
     public void resetGame() {
         this.currentGame = null;
     }

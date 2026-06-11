@@ -17,12 +17,11 @@ VALUES
     ('Bear Trap', 'TRAP', NULL, NULL, 0, 'When your opponent Normal Summons a monster with 1000 or more ATK: Target that monster; destroy that target.', '/images/cards/bear_trap.jpg'),
     ('Self-Destruct Sword', 'TRAP', NULL, NULL, 0, 'When an opponents monster declares an attack: Target the attacking monster; destroy that target.', '/images/cards/self_destruct_sword.jpg');
 
--- 2. Ubaci Dekove
+
 INSERT INTO decks (deck_name) VALUES ('Mugi'), ('Saiba');
 
--- 3. Poveži karte s Mugi dekom (ID deka je vjerojatno 1, ID karata 1 i 2)
--- Ako si koristio tablicu deck_cards s quantity:
-INSERT INTO deck_cards (deck_id, card_id, quantity) VALUES (1, 1, 2); -- 3 Sage of wisdom
+
+INSERT INTO deck_cards (deck_id, card_id, quantity) VALUES (1, 1, 2);
 INSERT INTO deck_cards (deck_id, card_id, quantity) VALUES (1, 4, 2);
 INSERT INTO deck_cards (deck_id, card_id, quantity) VALUES (1, 2, 3);
 INSERT INTO deck_cards (deck_id, card_id, quantity) VALUES (1, 3, 3);
