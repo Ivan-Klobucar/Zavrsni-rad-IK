@@ -1,14 +1,13 @@
 package com.app.backend.dto;
 
 import java.util.List;
-import java.util.Map;
 
+// sluzi za spremanje podataka sa kojima cemo pripremiti polje i igrace
 public class BoardSetupDTO {
     private String playerDeckName;
     private SideSetup player;
     private SideSetup opponent;
 
-    // Getteri i Setteri
     public String getPlayerDeckName() { return playerDeckName; }
     public void setPlayerDeckName(String playerDeckName) { this.playerDeckName = playerDeckName; }
     public SideSetup getPlayer() { return player; }
@@ -16,6 +15,7 @@ public class BoardSetupDTO {
     public SideSetup getOpponent() { return opponent; }
     public void setOpponent(SideSetup opponent) { this.opponent = opponent; }
 
+    // priprema samog polja
     public static class SideSetup {
         private CardDTO fieldZone;
         private List<CardDTO> monsterZone;
@@ -23,7 +23,6 @@ public class BoardSetupDTO {
         private List<CardDTO> graveyard;
         private List<CardDTO> hand;
 
-        // Getteri i Setteri
         public CardDTO getFieldZone() { return fieldZone; }
         public void setFieldZone(CardDTO fieldZone) { this.fieldZone = fieldZone; }
         public List<CardDTO> getMonsterZone() { return monsterZone; }

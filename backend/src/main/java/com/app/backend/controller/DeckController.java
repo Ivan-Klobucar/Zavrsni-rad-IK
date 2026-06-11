@@ -8,12 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/decks")
-@CrossOrigin(origins = "*") // Omogućava pozive iz Reacta
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class DeckController {
 
     private final DeckService deckService;
-    // GET /api/decks/Mugi
+
+    // sluzi za pozivanje potrebnog spila
     @GetMapping("/{deckName}")
     public ResponseEntity<Deck> getDeck(@PathVariable String deckName) {
         Deck deck = deckService.getDeckByName(deckName);

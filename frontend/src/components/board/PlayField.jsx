@@ -4,11 +4,12 @@ import CardSlot from './CardSlot';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 const boardStateHelper = (zoneArray) => { const arr = [...(zoneArray || [])]; while (arr.length < 5) arr.push(null); return arr.slice(0, 5); };
 
+// sluzi za prikaz glavnog polja
 const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameOver, attackingMonster, handleOpponentMonsterClick, setHoveredCard, setGyModal, opponentTopGyCard, playerTopGyCard, handlePlayerMonsterClick, canDoMainPhaseActions, setSelectedHandCard, selectedHandCard, tributeState, handleDownloadPDF, handleResetGame }) => {
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minWidth: 0 }}>
 
-            {/* STATISTIKA MODAL */}
+            {/* za statistiku */}
             {isGameOver && (
                 <div style={{ position: 'absolute', top: '20px', right: '20px', width: '320px', backgroundColor: 'rgba(26, 26, 26, 0.95)', border: '2px solid #e5a822', borderRadius: '12px', padding: '20px', zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
                     <h3 style={{ color: '#00ffff', margin: '0 0 15px 0', borderBottom: '1px solid #444', paddingBottom: '10px' }}>📊 Analiza Kruga</h3>
@@ -30,7 +31,7 @@ const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameO
                 </div>
             )}
 
-            {/* STATUS BAR */}
+            {/* status */}
             <div style={{ flex: '0 0 auto', padding: '10px 20px', backgroundColor: '#222', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #444' }}>
                 <div style={{ color: 'red', fontWeight: 'bold', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>SAIBA LP: {boardData.opponent.lifePoints}</div>
                 <div style={{ display: 'flex', gap: '5px' }}>
@@ -46,13 +47,12 @@ const PlayField = ({ boardData, currentPhase, phases, handlePhaseChange, isGameO
                 <div style={{ color: '#00ff00', fontWeight: 'bold', fontSize: 'clamp(14px, 1.5vw, 18px)' }}>TVOJ LP: {boardData.player.lifePoints}</div>
             </div>
 
-            {/* ARENA */}
+            {/* polje */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', padding: '15px', position: 'relative', overflow: 'hidden', minHeight: 0 }}>
                 {attackingMonster && boardStateHelper(boardData.opponent.monsterZone).every(c => c === null) && !isGameOver && (
                     <button onClick={() => handleOpponentMonsterClick(null)} style={{ position: 'absolute', top: '35%', padding: '15px 30px', backgroundColor: 'red', color: 'white', fontWeight: 'bold', fontSize: '18px', border: '2px solid white', cursor: 'pointer', zIndex: 10, borderRadius: '8px' }}>DIRECT ATTACK!</button>
                 )}
 
-                {/* SIGURNOSNA PROVJERA DODANA U PROTIVNIČKU RUKU */}
                 <div style={{ display: 'flex', gap: '5px', height: '12%', minHeight: '60px', justifyContent: 'center', flexShrink: 0 }}>
                     {boardData.opponent.hand.map((card, i) => (
                         <div key={`oh-${i}`} onMouseEnter={() => { if (isGameOver && card) setHoveredCard(card); else setHoveredCard({ cardName: "Nepoznata karta", cardType: "???", imageUrl: "/images/cards/card_back.jpg", cardAttack: null, cardDefense: null }); }} style={{ height: '100%', aspectRatio: '59/86', border: '1px solid #555', backgroundColor: '#111', borderRadius: '4px', overflow: 'hidden' }}>

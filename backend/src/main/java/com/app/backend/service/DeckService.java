@@ -13,6 +13,7 @@ public class DeckService {
 
     private final DeckRepository deckRepository;
 
+    // metoda koja dohvaca spil
     public Deck getDeckByName(String deckName) {
         return deckRepository.findByDeckName(deckName)
                 .orElseThrow(() -> new RuntimeException("Deck nije pronađen: " + deckName));

@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
+// dohvacamo spil
 public interface DeckRepository extends JpaRepository<Deck, Long> {
 
-    // Dodajemo JOIN FETCH dc.card kako bi odmah povukli podatke o karti
     @Query("SELECT DISTINCT d FROM Deck d " +
             "LEFT JOIN FETCH d.deckCards dc " +
             "LEFT JOIN FETCH dc.card " +

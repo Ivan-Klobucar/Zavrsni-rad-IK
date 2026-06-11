@@ -21,22 +21,25 @@ import java.util.List;
 @RequestMapping("/api/game")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+// zaduzen za logiku simulatora
 public class GameController {
 
     private final GameService gameService;
     private final StatisticsPdfService pdfService;
 
-    // Ova ruta se poziva kada klikneš "Spreman sam" u Reactu
+    // pocetak poteza
     @PostMapping("/start")
     public GameState startGame(@RequestBody BoardSetupDTO setup) {
         return gameService.initializeGame(setup);
     }
 
+    // promjena faza
     @PostMapping("/phase")
     public GameState changePhase(@RequestParam String phase) {
         return gameService.changePhase(phase);
     }
 
+    // potez koji korisnik odigra
     @PostMapping("/play")
     public GameState playCard(
             @RequestParam Long cardId,
@@ -45,21 +48,16 @@ public class GameController {
         return gameService.playCard(cardId, action, tributes);
     }
 
+    // provedba napada
     @PostMapping("/attack")
     public GameState attack(@RequestParam Long attackerId, @RequestParam(required = false) Long targetId) {
         return gameService.attack(attackerId, targetId);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleException(RuntimeException e) {
-        // Sada će umjesto "500 Internal Server Error" Reactu poslati pravu poruku!
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
-
+    // preuzimanje statistike
     @PostMapping("/statistics/download")
     public ResponseEntity<byte[]> downloadStatisticsPdf(@RequestBody GameState gameState) {
 
-        // Šaljemo taj primljeni gameState u servis koji generira PDF
         byte[] pdfBytes = pdfService.generateStatisticsPdf(gameState);
 
         HttpHeaders headers = new HttpHeaders();
@@ -68,10 +66,5 @@ public class GameController {
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
-    }
-    @PostMapping("/reset")
-    public ResponseEntity<String> resetGame() {
-        gameService.resetGame();
-        return ResponseEntity.ok("Igra je resetirana.");
     }
 }

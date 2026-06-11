@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "deck_cards")
 @Data
 @NoArgsConstructor
+// deklaracija poveznica spila i karata
 public class DeckCard {
 
     @Id

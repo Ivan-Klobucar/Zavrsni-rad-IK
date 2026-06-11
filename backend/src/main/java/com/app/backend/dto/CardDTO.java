@@ -2,6 +2,7 @@ package com.app.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+// sve osobine karata koje se koriste u raznim funkcijama
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CardDTO {
     private Long cardId;

@@ -1,6 +1,7 @@
 import React from 'react';
-import '../styles/Customization.css'; // Obavezno dodaj import!
+import '../styles/Customization.css';
 
+//Prikaz za odabir spila kojim ce korisnik igrat
 export default function DeckSelection({ onSelect }) {
     return (
         <div className="deck-selection-container">

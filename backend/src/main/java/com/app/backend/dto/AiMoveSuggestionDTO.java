@@ -1,10 +1,11 @@
 package com.app.backend.dto;
 
+// sprema nuzne podatke za glavne AI sugestihje
 public class AiMoveSuggestionDTO {
-    private Long cardId;
-    private String cardName;
-    private String action; // SUMMON, ATTACK, ACTIVATE
-    private double successProb;
+    private final Long cardId;
+    private final String cardName;
+    private final String action;
+    private final double successProb;
 
     public AiMoveSuggestionDTO(Long cardId, String cardName, String action, double successProb) {
         this.cardId = cardId;

@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 
+// deklaracija spila
 public class Deck{
 
     @Id

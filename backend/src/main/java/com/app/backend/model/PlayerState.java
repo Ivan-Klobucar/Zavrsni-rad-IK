@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
+// spremanje stanja svakog igraca, broj karata, zivotni bodovi je li ista prizvao
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlayerState {
     private int lifePoints = 8000;
@@ -16,10 +17,8 @@ public class PlayerState {
     private List<CardDTO> spellTrapZone = new ArrayList<>();
     private List<CardDTO> graveyard = new ArrayList<>();
     private CardDTO fieldZone;
-    private int deckSize = 0;
 
     public PlayerState() {}
-    // Getteri i Setteri
     public int getLifePoints() { return lifePoints; }
     public void setLifePoints(int lifePoints) { this.lifePoints = lifePoints; }
     public boolean isHasNormalSummonedThisTurn() { return hasNormalSummonedThisTurn; }
@@ -36,6 +35,5 @@ public class PlayerState {
     public void setGraveyard(List<CardDTO> graveyard) { this.graveyard = graveyard; }
     public CardDTO getFieldZone() { return fieldZone; }
     public void setFieldZone(CardDTO fieldZone) { this.fieldZone = fieldZone; }
-    public int getDeckSize() { return deckSize; }
-    public void setDeckSize(int deckSize) { this.deckSize = deckSize; }
+
 }

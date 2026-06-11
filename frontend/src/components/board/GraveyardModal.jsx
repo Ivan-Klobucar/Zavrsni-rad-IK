@@ -2,6 +2,7 @@ import React from 'react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
+// rijesava logiku i prikaz groblja
 const GraveyardModal = ({ gyModal, setGyModal, tributeState, setHoveredCard, executeAction }) => {
     if (!gyModal.isOpen) return null;
 

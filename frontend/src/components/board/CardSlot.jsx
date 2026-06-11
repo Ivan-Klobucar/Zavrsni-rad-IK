@@ -3,6 +3,7 @@ import React from 'react';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 const CARD_BACK = `${BACKEND_URL}/images/cards/card_back.jpg`;
 
+// upotrebljava ga playfield, a sluzi za prikazivanje karte na pojedinom pravokutniku na polju
 const CardSlot = ({ card, type, isOpponent = false, label = "", onClick = null, attackingMonster, tributeState, isGameOver, setHoveredCard }) => {
     const bgImage = (type === 'deck' || type === 'extra') && !card ? `url(${CARD_BACK})` : 'none';
 

@@ -6,6 +6,7 @@ import InfoPanel from './InfoPanel';
 import PlayField from './PlayField';
 import GraveyardModal from './GraveyardModal';
 
+// temelj prikaza polja
 const GameBoard = ({ boardData: initialBoardData , onReset}) => {
     const [boardData, setBoardData] = useState(initialBoardData);
     const [hoveredCard, setHoveredCard] = useState(null);
@@ -20,6 +21,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
 
     if (!boardData) return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>Učitavanje polja...</div>;
 
+    // funkcija koja upravalja promjenom faza
     const handlePhaseChange = async (targetPhase) => {
         const currentIndex = phases.indexOf(currentPhase);
         const targetIndex = phases.indexOf(targetPhase);
@@ -31,6 +33,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         } catch (e) { console.error("Greška pri promjeni faze", e); }
     };
 
+    // ovisno o akciji se izvodi takav potez
     const handleActionClick = (actionType) => {
         if (!selectedHandCard) return;
         if (actionType === 'SUMMON') {
@@ -66,6 +69,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         executeAction(actionType, []);
     };
 
+    // poziva se backend metoda koja rijesava logiku igranja karte
     const executeAction = async (actionType, tributeIds) => {
         try {
             const newData = await gameAPI.playCard(selectedHandCard.cardId, actionType, tributeIds);
@@ -73,6 +77,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         } catch (err) { alert(err.message || "Greška pri izvršavanju akcije!"); setTributeState({ active: false, needed: 0, selectedIds: [], action: null, target: null }); }
     };
 
+    // ako izaberemo cudoviste
     const handlePlayerMonsterClick = (card) => {
         if (!card) return;
         if (tributeState.active && tributeState.target === 'MY_FIELD') {
@@ -88,6 +93,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         }
     };
 
+    // ako odaberemo protivnikovo cudoviste ili u BP ili kada ga trebamo unistit
     const handleOpponentMonsterClick = async (targetCard) => {
         if (tributeState.active && tributeState.target === 'OPP_FIELD') {
             if (!targetCard) return;
@@ -103,6 +109,7 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         } catch (err) { alert(err.message || "Greška pri napadu!"); }
     };
 
+    // poveznica na backend da iskoristimo metodu koja poziva generiranje statistike i njeno preuzimanje
     const handleDownloadPDF = async () => {
         try {
             const blob = await gameAPI.downloadStatistics(boardData);
@@ -112,22 +119,11 @@ const GameBoard = ({ boardData: initialBoardData , onReset}) => {
         } catch (error) { console.error(error); alert("Došlo je do greške pri dohvaćanju PDF-a s backenda!"); }
     };
 
-    const handleResetGame = async () => {
-        try {
-            await gameAPI.resetGame(); // Javi backendu da obriše igru
-            if (onReset) {
-                onReset(); // Pozovi funkciju roditelja koja gasi ekran s pločom
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Greška pri izlasku iz igre.");
-        }
-    };
-
     const canDoMainPhaseActions = ['MP1', 'MP2'].includes(currentPhase);
     const opponentTopGyCard = boardData.opponent.graveyard && boardData.opponent.graveyard.length > 0 ? boardData.opponent.graveyard[boardData.opponent.graveyard.length - 1] : null;
     const playerTopGyCard = boardData.player.graveyard && boardData.player.graveyard.length > 0 ? boardData.player.graveyard[boardData.player.graveyard.length - 1] : null;
 
+    // u svaki od ovih filea se ide sa odredenim parametrima koji rijesavaju prikaz polja
     return (
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#111', color: 'white', overflow: 'hidden' }}>
 

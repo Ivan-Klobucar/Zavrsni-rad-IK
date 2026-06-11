@@ -1,11 +1,9 @@
 import axios from 'axios';
 
 import { BACKEND_URL } from "../config/env.js";
-// 1. Konfiguracija URL-a (kao u tvom drugom projektu)
-// Ovo omogućuje da lako promijeniš backend adresu u .env fileu
+
 const API_BASE = (BACKEND_URL || '').replace(/\/$/, '') + '/api';
 
-// 2. Kreiranje Axios instance
 const api = axios.create({
     baseURL: API_BASE,
     headers: {
@@ -13,17 +11,19 @@ const api = axios.create({
     }
 });
 
+// api koji sluzi za pozivanje metode iz kontrolera koji handela akcije sa spilom
 export const deckAPI = {
     getByName: async (name) => {
         const response = await api.get(`/decks/${name}`);
-        return response.data; // Axios sprema podatke u .data
+        return response.data;
     },
 };
 
-// Pomoćna funkcija za sigurno spajanje URL-a
 const cleanUrl = (url) => url.replace(/([^:]\/)\/+/g, "$1");
 
+// rijesava sve potrebne akcije ostale
 export const gameAPI = {
+    //zapocinje igru
     startGame: async (payload) => {
 
         const targetUrl = cleanUrl(`${BACKEND_URL}/api/game/start`);
@@ -41,7 +41,7 @@ export const gameAPI = {
         return await response.json();
     },
 
-// Ažuriran changePhase s URLSearchParams
+    // mijenja fazu dvoboja
     changePhase: async (phase) => {
         const params = new URLSearchParams();
         params.append('phase', phase);
@@ -59,21 +59,21 @@ export const gameAPI = {
         return await response.json();
     },
 
+    // odigravanje karte
     playCard: async (cardId, action, tributes = []) => {
-// Koristimo URLSearchParams za ispravno kodiranje parametara
+
         const params = new URLSearchParams();
         params.append('cardId', cardId);
         params.append('action', action);
 
-        // Šaljemo tributes samo ako ih ima, Spring će ih prepoznati kao listu
+
         if (tributes && tributes.length > 0) {
             tributes.forEach(id => params.append('tributes', id));
         }
 
         const url = `${BACKEND_URL}/api/game/play?${params.toString()}`;
-        console.log("Šaljem zahtjev na:", url); // OVO POGLEDAJ U KONZOLI PREGLEDNIKA (F12)
         const response = await fetch(cleanUrl(url), {
-            method: 'POST' // Mora biti POST jer je u kontroleru @PostMapping
+            method: 'POST'
         });
 
         if (!response.ok) {
@@ -83,12 +83,11 @@ export const gameAPI = {
         return await response.json();
     },
 
-// Ažuriran attack s URLSearchParams
+    //napadanje cudovista
     attack: async (attackerId, targetId) => {
         const params = new URLSearchParams();
         params.append('attackerId', attackerId);
 
-        // TargetId dodajemo samo ako nije null (npr. kod direktnog napada je null)
         if (targetId) {
             params.append('targetId', targetId);
         }
@@ -106,14 +105,15 @@ export const gameAPI = {
         return await response.json();
     },
 
+    // preuzimanje statistike
     downloadStatistics: async (boardData) => {
         const response = await fetch(cleanUrl(`${BACKEND_URL}/api/game/statistics/download`), {
-            method: 'POST', // Promijenjeno u POST
+            method: 'POST',
             headers: {
                 'Accept': 'application/pdf',
-                'Content-Type': 'application/json' // Govorimo backendu da šaljemo JSON
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify(boardData) // Šaljemo trenutno stanje igre
+            body: JSON.stringify(boardData)
         });
 
         if (!response.ok) {
@@ -121,20 +121,6 @@ export const gameAPI = {
         }
 
         return await response.blob();
-    },
-    resetGame: async () => {
-        const response = await fetch(cleanUrl(`${BACKEND_URL}/api/game/reset`), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error("Greška pri resetiranju igre s backenda.");
-        }
-
-        return await response.text();
     }
 };
 

@@ -1,4 +1,3 @@
-/* --- Customization.css --- */
 
 .deck-selection-container {
     display: flex;
@@ -47,7 +46,6 @@
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.6);
 }
 
-/* Hover efekt prebačen u čisti CSS */
 .deck-btn:hover {
     background-color: #fdd15f;
     border-color: white;

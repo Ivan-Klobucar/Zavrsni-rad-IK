@@ -1,20 +1,16 @@
 package com.app.backend.service;
 
-import com.app.backend.dto.CardDTO;
 import com.app.backend.dto.TurnStatisticsDTO;
 import com.app.backend.model.GameState;
 import org.openpdf.text.*;
 import org.openpdf.text.pdf.BaseFont;
-import org.openpdf.text.pdf.PdfPCell;
-import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
+// generiranje pdf statistike
 @Service
 public class StatisticsPdfService {
 
@@ -26,26 +22,22 @@ public class StatisticsPdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // 1. KLJUČNO: Govorimo sustavu da učita fontove s računala (Windows/Mac)
             FontFactory.registerDirectories();
 
-            // Postavke za naša slova (Unicode i ugrađivanje fonta u PDF)
             String fontName = "Arial";
             String encoding = BaseFont.IDENTITY_H;
             boolean embedded = BaseFont.EMBEDDED;
 
-            // 2. Definiranje Arial fontova s podrškom za č, ć, đ, š, ž
+            // namjestanje fontova
             Font titleFont = FontFactory.getFont(fontName, encoding, embedded, 18, Font.BOLD);
             Font sectionFont = FontFactory.getFont(fontName, encoding, embedded, 14, Font.BOLD);
             Font normalFont = FontFactory.getFont(fontName, encoding, embedded, 11, Font.NORMAL);
             Font boldFont = FontFactory.getFont(fontName, encoding, embedded, 11, Font.BOLD);
 
-            // Boje za ocjene (sada koriste Arial Bold)
             Font uspjehFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, new Color(0, 150, 0));
             Font losFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, Color.RED);
             Font pasivanFont = FontFactory.getFont(fontName, encoding, embedded, 12, Font.BOLD, Color.BLUE);
 
-            // NASLOV
             Paragraph title = new Paragraph("PROBABILISTIČKA ANALIZA I EVALUACIJA RESURSA", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
@@ -53,8 +45,8 @@ public class StatisticsPdfService {
 
             TurnStatisticsDTO stats = gameState.getStatistics();
             if (stats != null) {
+                // nadodajemo tekst u dokument i uz njega i sve ostale vrijednosti
 
-                // 1. EKONOMIJA ČUDOVIŠTA (Weighted Counter)
                 document.add(new Paragraph("1. Ekonomski Balans Čudovišta na Ploči", sectionFont));
                 document.add(new Paragraph(" • Dobivena vlastita čudovišta: +" + stats.getMonstersGained(), normalFont));
                 document.add(new Paragraph(" • Izgubljena vlastita čudovišta (<2000 ATK): -" + stats.getMonstersLostNormal(), normalFont));
@@ -62,7 +54,6 @@ public class StatisticsPdfService {
                 document.add(new Paragraph(" • Uništena protivnička čudovišta (<2000 ATK): +" + stats.getMonstersDestroyedNormal(), normalFont));
                 document.add(new Paragraph(" • Uništena protivnička kapitalna čudovišta (>=2000 ATK): +" + (stats.getMonstersDestroyedBoss() * 2) + " (Količina: " + stats.getMonstersDestroyedBoss() + ")", normalFont));
 
-                // Formula za izračun sume
                 int monsterSum = (stats.getMonstersGained() * 1)
                         + (stats.getMonstersDestroyedNormal() * 1)
                         + (stats.getMonstersDestroyedBoss() * 2)
@@ -72,7 +63,6 @@ public class StatisticsPdfService {
                 Paragraph sumPara = new Paragraph("Ukupni indeks ekonomske sume: " + monsterSum, boldFont);
                 document.add(sumPara);
 
-                // Ispis različitih stanja ovisno o sumi
                 Paragraph verdictPara = new Paragraph();
                 verdictPara.add(new Chunk("Ocjena taktičkog poteza: ", normalFont));
                 if (monsterSum > 0) {
@@ -85,7 +75,6 @@ public class StatisticsPdfService {
                 document.add(verdictPara);
                 document.add(new Paragraph("\n"));
 
-                // 2. DETALJNI DNEVNIK UNIŠTENJA
                 document.add(new Paragraph("2. Specifikacija Uništenih Karata", sectionFont));
                 if (stats.getDestructionLog() != null && !stats.getDestructionLog().isEmpty()) {
                     for (String logEntry : stats.getDestructionLog()) {
@@ -96,14 +85,12 @@ public class StatisticsPdfService {
                 }
                 document.add(new Paragraph("\n"));
 
-                // 3. USKLAĐENOST S AI-EM I EVALUACIJA INTUICIJE
                 document.add(new Paragraph("3. Evaluacija Odluka i Usporedba s AI Agentom", sectionFont));
                 document.add(new Paragraph(" • Broj situacija u kojima je korisnik PRATIO AI (Aktivno/Pasivno): " + stats.getAiFollowedCount(), normalFont));
                 document.add(new Paragraph(" • Broj situacija u kojima je korisnik IGNORIRAO AI (Aktivno/Pasivno): " + stats.getAiIgnoredCount(), normalFont));
 
                 document.add(new Paragraph("Strateški zaključak: ", boldFont));
 
-                // DINAMIČKI IZRAČUN POVRATNE INFORMACIJE DIREKTNO U PDF-u
                 String feedbackMessage = determineDynamicFeedback(stats, monsterSum);
                 document.add(new Paragraph(" -> " + feedbackMessage, normalFont));
 
@@ -114,7 +101,6 @@ public class StatisticsPdfService {
             document.add(new Paragraph("\n"));
             document.add(new Paragraph("--------------------------------------------------------------------------------------------------"));
 
-            // 4. KONAČNO STANJE RESURSA
             document.add(new Paragraph("4. Trenutno Stanje Životnih Bodova", sectionFont));
             document.add(new Paragraph("Igrač LP: " + gameState.getPlayer().getLifePoints() + " | Protivnik LP: " + gameState.getOpponent().getLifePoints(), normalFont));
             document.add(new Paragraph("Dnevnik Akcija i Poteza (Match Log)", sectionFont));
@@ -135,7 +121,7 @@ public class StatisticsPdfService {
         return out.toByteArray();
     }
 
-    // NOVA METODA: Ovdje na licu mjesta određujemo poruku na temelju trenutnog stanja
+    // metoda koja vraca poruku ovisno o tome koliko smo siljedili intuiciju a koliko AI
     private String determineDynamicFeedback(TurnStatisticsDTO stats, int netAdvantage) {
         if (stats.getAiIgnoredCount() > stats.getAiFollowedCount()) {
             if (netAdvantage > 0) {

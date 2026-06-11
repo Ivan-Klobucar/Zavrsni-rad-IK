@@ -1,6 +1,3 @@
-/* App.css */
-
-/* --- GLOBALNO --- */
 body {
     margin: 0;
     padding: 0;
@@ -10,7 +7,6 @@ body {
     font-family: sans-serif;
 }
 
-/* --- GAME FLOW & MODAL --- */
 .game-flow {
     width: 100vw;
     height: 100vh;
@@ -30,7 +26,6 @@ body {
     text-align: center;
 }
 
-/* --- BUTTONS --- */
 .btn {
     padding: 10px 20px; cursor: pointer; margin-top: 15px;
 }
@@ -40,7 +35,6 @@ body {
 }
 .btn-primary:hover { background-color: #27ae60; }
 
-/* --- DECK SELECTION --- */
 .deck-selection {
     display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
 }
@@ -51,7 +45,6 @@ body {
     padding: 20px; cursor: pointer; font-size: 16px;
 }
 
-/* --- CUSTOMIZATION --- */
 .customization-container {
     padding: 40px; display: flex; flex-direction: column; align-items: center;
     height: 100vh; background-color: #121212; color: white;
@@ -68,7 +61,6 @@ body {
 }
 .card-item:hover { background: #444; }
 
-/* --- GAME BOARD --- */
 .game-board {
     display: flex; width: 100vw; height: 100vh;
 }
@@ -79,12 +71,10 @@ body {
     flex: 1; display: flex; flex-direction: column; padding: 10px;
 }
 
-/* --- CARD HOVER --- */
 .card-image-placeholder {
     width: 100%; aspect-ratio: 2/3; border: 1px solid #555; background-color: #222;
 }
 
-/* --- FIELD SIDE & ZONES --- */
 .field-side {
     flex: 1; display: flex; flex-direction: column; position: relative; justify-content: center; gap: 10px;
 }
@@ -101,7 +91,6 @@ body {
     display: flex; gap: 10px;
 }
 
-/* Ruka */
 .hand-container {
     position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 5px; height: 80px; overflow: hidden; z-index: 10;
@@ -109,23 +98,35 @@ body {
 .hand-card {
     width: 60px; height: 100px; background-color: #1e3a8a; border: 1px solid #fff; border-radius: 4px;
 }
-.hand-card:hover { transform: translateY(-10px); transition: 0.2s; cursor: pointer; }
+.hand-card:hover {
+    transform: translateY(-10px); transition: 0.2s; cursor: pointer;
+}
 
-/* Protivnikovo polje (Rotira strukturu) */
-.field-side.opponent { flex-direction: column-reverse; } /* Ruka ide na vrh */
-.field-side.opponent .zones-container { flex-direction: row-reverse; } /* Protivnikov Deck ide na njegovu desnu (našu lijevu) stranu */
-.field-side.opponent .hand-container { top: -30px; bottom: auto; }
-.field-side.opponent .hand-card:hover { transform: translateY(10px); }
+.field-side.opponent {
+    flex-direction: column-reverse;
+}
+.field-side.opponent .zones-container {
+    flex-direction: row-reverse;
+}
+.field-side.opponent .hand-container {
+    top: -30px; bottom: auto;
+}
+.field-side.opponent .hand-card:hover {
+    transform: translateY(10px);
+}
 
-/* Pojedinačna zona */
 .card-zone {
     width: 70px; height: 100px; border: 2px dashed #666;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; color: #aaa; cursor: pointer; transition: 0.2s;
 }
-.card-zone:hover { border-color: #fff; background-color: rgba(255,255,255,0.2) !important; color: #fff; }
+.card-zone:hover {
+    border-color: #fff;
+    background-color: rgba(255,255,255,0.2) !important;
+    color: #fff;
+}
 
-/* Ruka */
+
 .hand-container {
     position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 5px; height: 80px; overflow: hidden; z-index: 10;
@@ -133,24 +134,38 @@ body {
 .hand-card {
     width: 60px; height: 100px; background-color: #1e3a8a; border: 1px solid #fff; border-radius: 4px;
 }
-.hand-card:hover { transform: translateY(-10px); transition: 0.2s; cursor: pointer;} /* Mali efekt! */
+.hand-card:hover {
+    transform: translateY(-10px);
+    transition: 0.2s;
+    cursor: pointer;
+}
+.field-side.opponent {
+    flex-direction: column-reverse;
+}
+.field-side.opponent .zones-container {
+    flex-direction: row-reverse;
+}
+.field-side.opponent .matrix-zones {
+    flex-direction: column-reverse;
+}
+.field-side.opponent .deck-grave-zones {
+    flex-direction: column-reverse;
+}
+.field-side.opponent .hand-container {
+    top: -30px;
+    bottom: auto;
+}
 
-/* Protivnikovo polje (Ovo automatski okreće sve elemente bez JS logike!) */
-.field-side.opponent { flex-direction: column-reverse; }
-.field-side.opponent .zones-container { flex-direction: row-reverse; }
-.field-side.opponent .matrix-zones { flex-direction: column-reverse; }
-.field-side.opponent .deck-grave-zones { flex-direction: column-reverse; }
-.field-side.opponent .hand-container { top: -30px; bottom: auto; }
 
-/* Pojedinačna zona */
 .card-zone {
     width: 70px; height: 100px; border: 2px dashed #666;
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; color: #aaa; cursor: pointer;
 }
-.card-zone:hover { border-color: #fff; }
+.card-zone:hover {
+    border-color: #fff;
+}
 
-/* --- PHASE BAR --- */
 .phase-bar {
     display: flex; justify-content: center; gap: 15px; padding: 10px 0;
     border-top: 2px solid #555; border-bottom: 2px solid #555; margin: 10px 0;
@@ -161,22 +176,17 @@ body {
 .phase-btn:hover { background: #555; }
 
 .card-slot-container.is-facedown {
-    /* Ako želiš da se samo čudovišta rotiraju, a ne i trapovi,
-       možeš dodati dodatnu provjeru za tip karte */
-    transform: rotate(0deg); /* Početno stanje */
+    transform: rotate(0deg);
 }
 
-/* Stil za poledinu koja nestaje na hover */
 .card-back-overlay {
     transition: opacity 0.3s ease;
 }
 
-/* X-RAY EFEKT: Kada pređeš mišem, poledina postaje skoro skroz prozirna */
 .card-slot-container:hover .card-back-overlay {
-    opacity: 0.1; /* Vidiš kartu "kroz" poledinu */
+    opacity: 0.1;
 }
 
-/* Opcionalno: Povećaj kartu na hover da se bolje vidi */
 .card-slot-container:hover {
     z-index: 100;
     transform: scale(1.2);

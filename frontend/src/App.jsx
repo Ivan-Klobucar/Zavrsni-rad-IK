@@ -1,6 +1,6 @@
 import React from 'react';
-import GameFlow from './components/GameFlow'; // Prilagodi putanju ako treba
-import './App.css'; // OBAVEZNO dodaj ovaj import!
+import GameFlow from './components/GameFlow'; // kljucan import jer sanjime krecemo u gameflow
+import './App.css';
 
 function App() {
     return (

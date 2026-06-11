@@ -3,18 +3,20 @@ import { deckAPI } from '../services/api.js';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080';
 
-// Dodali smo 'hand' niz u inicijalno stanje
+// inicijalizirali smo prazno polje koje ce se nadopunjavati u metodi
 const emptyBoardSide = () => ({
     fieldZone: null,
     monsterZone: [null, null, null, null, null],
     spellTrapZone: [null, null, null, null, null],
     graveyard: [],
-    hand: [null, null, null, null, null] // 5 mjesta za početnu ruku
+    hand: [null, null, null, null, null] // 5 mjesta rezervirana za pocetnu ruku
 });
 
 const Customization = ({ selectedDeck, onReady }) => {
+    // pridodjeljivcnje spila
     const opponentDeckName = selectedDeck === 'Mugi' ? 'Saiba' : 'Mugi';
 
+    // u pocetku pridodjeljujemo vrijednosti u startu
     const [playerDeckData, setPlayerDeckData] = useState(null);
     const [opponentDeckData, setOpponentDeckData] = useState(null);
 
@@ -22,11 +24,9 @@ const Customization = ({ selectedDeck, onReady }) => {
     const [hoveredCard, setHoveredCard] = useState(null);
     const [selectedCardToPlace, setSelectedCardToPlace] = useState(null);
 
-    // NOVO: Toggle za slanje u groblje i stanje za Random S/T
     const [gyModeActive, setGyModeActive] = useState(false);
     const [randomOpponentSTCount, setRandomOpponentSTCount] = useState(0);
 
-    // NOVO: Stanje za GY Modal
     const [gyModal, setGyModal] = useState({ isOpen: false, side: '' });
 
     const [boardState, setBoardState] = useState({
@@ -34,6 +34,7 @@ const Customization = ({ selectedDeck, onReady }) => {
         opponent: emptyBoardSide()
     });
 
+    // metoda koristi api.js, odnosno deckAPI, koji je poveznica sa backendom kako bi dohvatio podatke o spilu
     useEffect(() => {
         const fetchDecks = async () => {
             try {
@@ -48,7 +49,7 @@ const Customization = ({ selectedDeck, onReady }) => {
         fetchDecks();
     }, [selectedDeck, opponentDeckName]);
 
-    // Ažurirano brojanje da uključuje i Ruku (Hand)
+    // funkcija koja broji koliko karata ima u ruci i polju
     const getCountOnBoard = (cardId, side) => {
         let count = 0;
         const countCard = (c) => { if (c && c.cardId === cardId) count++; };
@@ -62,6 +63,8 @@ const Customization = ({ selectedDeck, onReady }) => {
         return count;
     };
 
+    // funkcija koja koristi za odabir karte u spilu, ako ih vise nema u spilu nemozemo je izabrati,
+    // takoder ima i dio gdje ako toggleamo gy, onda se svaka pritisnuta karta odmah salje na groblje
     const handleDeckCardClick = (deckCard) => {
         const cardId = deckCard.card.cardId;
         const maxQuantity = deckCard.quantity;
@@ -72,10 +75,8 @@ const Customization = ({ selectedDeck, onReady }) => {
             return;
         }
 
-        // NOVO: Ako je uključen GY Mode, karta ide ravno u groblje
         if (gyModeActive) {
             const newBoard = { ...boardState };
-            // Pazi na varijablu 'facedown' ovisno o tome kako backend očekuje
             newBoard[activeSide].graveyard.push({ ...deckCard.card, facedown: false });
             setBoardState(newBoard);
             setSelectedCardToPlace(null);
@@ -84,9 +85,10 @@ const Customization = ({ selectedDeck, onReady }) => {
         }
     };
 
+    // funkcija sa kojom postavljamo karte na polje
     const handleZoneClick = (zoneType, index = null) => {
+        // kontrola polja ako nismo odabrali niti jednu kartu
         if (!selectedCardToPlace) {
-            // Micanje karte s polja ako kliknemo bez ičega u "ruci"
             const newBoard = { ...boardState };
             if (index !== null && newBoard[activeSide][zoneType][index]) {
                 newBoard[activeSide][zoneType][index] = null;
@@ -98,26 +100,28 @@ const Customization = ({ selectedDeck, onReady }) => {
             return;
         }
 
-        // Validacije
+        // upozorenja da moramo na pravilna mjesta postavljati karte
         if (selectedCardToPlace.cardType === 'MONSTER' && zoneType !== 'monsterZone' && zoneType !== 'hand') {
-            alert("Čudovišta moraju ići u Monster zonu ili Ruku!"); return;
+            alert("Čudovišta moraju ići u monster zonu ili ruku."); return;
         }
         if (zoneType === 'fieldZone' && selectedCardToPlace.cardType !== 'SPELL') {
-            alert("Samo Spell karte mogu u Field Zonu!"); return;
+            alert("Samo spell karte mogu u field zonu."); return;
         }
         if ((selectedCardToPlace.cardType === 'SPELL' || selectedCardToPlace.cardType === 'TRAP') && zoneType !== 'spellTrapZone' && zoneType !== 'fieldZone' && zoneType !== 'hand') {
-            alert("Spell i Trap karte idu u S/T, Field zonu ili Ruku!"); return;
+            alert("Spell i trap karte idu u S/T, field zonu ili ruku."); return;
         }
 
+        // provjera zauzetosti pojedine zone
         const isOccupied = index !== null ? boardState[activeSide][zoneType][index] !== null : boardState[activeSide][zoneType] !== null;
         if (isOccupied) {
-            alert("Ova zona je već zauzeta!"); return;
+            alert("Ova zona je već zauzeta."); return;
         }
 
-        // Postavljamo facedown za trapove u S/T zoni
+        // kartama se pridodjeljuje facedown ako su spell ili trap
         const isFacedown = (zoneType === 'spellTrapZone' && (selectedCardToPlace.cardType === 'TRAP' || selectedCardToPlace.cardType === 'SPELL'));
         const cardToPlace = { ...selectedCardToPlace, facedown: isFacedown };
 
+        // azuriranje promjena i postavljanje na polje
         const newBoard = { ...boardState };
         if (index !== null) newBoard[activeSide][zoneType][index] = cardToPlace;
         else newBoard[activeSide][zoneType] = cardToPlace;
@@ -126,21 +130,22 @@ const Customization = ({ selectedDeck, onReady }) => {
         setSelectedCardToPlace(null);
     };
 
+    // klikom na kartu u grobljku se vraca u spil
     const handleRemoveFromGy = (indexToRemove) => {
         const newBoard = { ...boardState };
         newBoard[gyModal.side].graveyard.splice(indexToRemove, 1);
         setBoardState(newBoard);
     };
 
+    // namjestanje nasumicnih spell i trap karata
     const handleReadyWithRandoms = () => {
-        const finalBoard = JSON.parse(JSON.stringify(boardState)); // Deep copy
-
-        // NOVO: Dodavanje nasumičnih Spell/Trap karata za protivnika
+        const finalBoard = JSON.parse(JSON.stringify(boardState));
+        // ako namjestimo broj nasumicnih karata
         if (randomOpponentSTCount > 0) {
             const oppDeck = opponentDeckData;
             let availableST = [];
 
-            // Prikupljamo sve preostale S/T karte iz deka
+            // uzimamo spell i trap karte protivnikovog spila, spremamo njihovu kolicinu i naziv
             oppDeck.deckCards.forEach(dc => {
                 if (dc.card.cardType === 'SPELL' || dc.card.cardType === 'TRAP') {
                     const used = getCountOnBoard(dc.card.cardId, 'opponent');
@@ -150,13 +155,18 @@ const Customization = ({ selectedDeck, onReady }) => {
                 }
             });
 
-            // Shufflanje niza
-            availableST.sort(() => 0.5 - Math.random());
+            //Fisher-Yates algoritam koji mijesa karte
+            for (let i = availableST.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
 
+                [availableST[i], availableST[j]] =
+                    [availableST[j], availableST[i]];
+            }
+
+            //prolazimo kroz slobodne zone i ako ih ima postavljamo karte izmjesane
             let placedCount = 0;
             for (let i = 0; i < 5; i++) {
                 if (placedCount >= randomOpponentSTCount) break;
-                // Ako je mjesto prazno, postavi nasumičnu kartu licem prema dolje
                 if (!finalBoard.opponent.spellTrapZone[i]) {
                     const randomCard = availableST.pop();
                     if (randomCard) {
@@ -167,7 +177,6 @@ const Customization = ({ selectedDeck, onReady }) => {
             }
         }
 
-        // Čišćenje null vrijednosti u rukama prije slanja na backend (Spring Boot želi samo čiste liste)
         finalBoard.player.hand = finalBoard.player.hand.filter(c => c !== null);
         finalBoard.opponent.hand = finalBoard.opponent.hand.filter(c => c !== null);
 
@@ -182,7 +191,7 @@ const Customization = ({ selectedDeck, onReady }) => {
     return (
         <div style={{ display: 'flex', height: '100vh', backgroundColor: '#1a1a1a', color: 'white' }}>
 
-            {/* GY MODAL ZA PREGLED I VRAĆANJE U DECK */}
+            {/* Groblje */}
             {gyModal.isOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <div style={{ backgroundColor: '#1a1a1a', padding: '30px', borderRadius: '12px', width: '80%', maxHeight: '80vh', overflowY: 'auto', border: '3px solid #e5a822' }}>
@@ -190,7 +199,7 @@ const Customization = ({ selectedDeck, onReady }) => {
                             <h2 style={{ color: '#e5a822', margin: 0 }}>Groblje: {gyModal.side === 'player' ? 'Tvoja Strana' : 'Protivnik'}</h2>
                             <button onClick={() => setGyModal({ isOpen: false, side: '' })} style={{ padding: '10px 20px', backgroundColor: '#444', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '5px' }}>X Zatvori</button>
                         </div>
-                        <p style={{ color: '#aaa', marginBottom: '15px' }}>Klikni na kartu kako bi ju vratio/la nazad u Deck.</p>
+                        <p style={{ color: '#aaa', marginBottom: '15px' }}>Klikni na kartu kako bi ju vratio nazad u Deck.</p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                             {currentGyCards.length > 0 ? currentGyCards.map((c, i) => (
                                 <div key={`gy-${i}`} onClick={() => handleRemoveFromGy(i)} onMouseEnter={() => setHoveredCard(c)} style={{ width: '100px', cursor: 'pointer', border: '2px solid red', borderRadius: '4px' }}>
@@ -202,14 +211,14 @@ const Customization = ({ selectedDeck, onReady }) => {
                 </div>
             )}
 
-            {/* LIJEVI STUPAC: DECK */}
+            {/* Prikaz spila */}
             <div style={{ width: '25%', overflowY: 'auto', padding: '10px', borderRight: '2px solid #444' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                     <button onClick={() => { setActiveSide('player'); setSelectedCardToPlace(null); }} style={{ padding: '10px', backgroundColor: activeSide === 'player' ? '#e5a822' : '#444', color: activeSide === 'player' ? 'black' : 'white', fontWeight: 'bold', cursor: 'pointer', flex: 1, border: 'none' }}>Tvoja Strana</button>
                     <button onClick={() => { setActiveSide('opponent'); setSelectedCardToPlace(null); }} style={{ padding: '10px', backgroundColor: activeSide === 'opponent' ? '#e5a822' : '#444', color: activeSide === 'opponent' ? 'black' : 'white', fontWeight: 'bold', cursor: 'pointer', flex: 1, border: 'none' }}>Protivnik</button>
                 </div>
 
-                {/* NOVO: Toggle gumb za groblje */}
+                {/* gumb za groblje */}
                 <button
                     onClick={() => setGyModeActive(!gyModeActive)}
                     style={{ width: '100%', padding: '12px', marginBottom: '15px', backgroundColor: gyModeActive ? 'darkred' : '#333', color: 'white', border: gyModeActive ? '2px solid red' : '1px solid #555', cursor: 'pointer', fontWeight: 'bold', borderRadius: '5px', transition: '0.3s' }}
@@ -231,12 +240,12 @@ const Customization = ({ selectedDeck, onReady }) => {
                 </div>
             </div>
 
-            {/* SREDINA: BOARD BUILDER */}
+            {/* postavljanje spell i trap karti */}
             <div style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
                 <h2>Uređuješ: {activeSide === 'player' ? 'Svoju stranu' : 'Protivnikovu stranu'}</h2>
                 {selectedCardToPlace && <div style={{ color: '#e5a822', marginBottom: '10px', fontWeight: 'bold' }}>Odabrano: {selectedCardToPlace.cardName}</div>}
 
-                {/* NOVO: Opcija za Random S/T protivnika */}
+                {/* nasumicno postavljanje spell i trap karata */}
                 {activeSide === 'opponent' && (
                     <div style={{ backgroundColor: '#222', padding: '15px', borderRadius: '8px', border: '1px solid #555', marginBottom: '20px', textAlign: 'center' }}>
                         <label style={{ fontWeight: 'bold', color: '#e5a822' }}>Auto-Set S/T pri početku: </label>
@@ -259,7 +268,7 @@ const Customization = ({ selectedDeck, onReady }) => {
                         </div>
                     </div>
 
-                    {/* Monster & S/T */}
+                    {/* Monster i S/T */}
                     <div>
                         <h4 style={{ margin: '0 0 5px 0', textAlign: 'center' }}>Monster Zona</h4>
                         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
@@ -290,10 +299,10 @@ const Customization = ({ selectedDeck, onReady }) => {
                     </div>
                 </div>
 
-                {/* NOVO: Prikaz Ruke (Hand) */}
+                {/*  Prikaz ruke */}
                 <div style={{ width: '100%', borderTop: '2px solid #444', paddingTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h3 style={{ margin: '0 0 10px 0', color: '#e5a822' }}>Početna Ruka (Maks 5)</h3>
-                    <p style={{ margin: '0 0 15px 0', fontSize: '12px', color: '#aaa' }}>Ostatak će backend nadopuniti iz deka kada igra počne.</p>
+                    <p style={{ margin: '0 0 15px 0', fontSize: '12px', color: '#aaa' }}>Ostatak nadopunjava backend.</p>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {boardState[activeSide].hand.map((card, idx) => (
                             <div key={`h-${idx}`} onClick={() => handleZoneClick('hand', idx)} onMouseEnter={() => card && setHoveredCard(card)} style={{ width: '70px', height: '102px', border: '1px solid #888', cursor: 'pointer', backgroundColor: '#111' }}>
@@ -304,7 +313,7 @@ const Customization = ({ selectedDeck, onReady }) => {
                 </div>
             </div>
 
-            {/* DESNI STUPAC: INFO PANEL */}
+            {/* prikaz informacija o pojedinoj karti */}
             <div style={{ width: '25%', padding: '20px', borderLeft: '2px solid #444', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 <button onClick={handleReadyWithRandoms} style={{ padding: '15px', fontSize: '18px', backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer', marginBottom: '20px', fontWeight: 'bold', borderRadius: '5px' }}>ZAVRŠI I ZAPOČNI IGRU</button>
                 {hoveredCard ? (

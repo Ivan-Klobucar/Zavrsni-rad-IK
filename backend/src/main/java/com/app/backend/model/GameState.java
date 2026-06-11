@@ -1,18 +1,16 @@
 package com.app.backend.model;
 
-import com.app.backend.dto.CardDTO;
 import com.app.backend.dto.TurnStatisticsDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.ArrayList;
-import java.util.List;
 
+// state koji pamti situaciju igre i njeno stanje
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GameState {
     private PlayerState player;
     private PlayerState opponent;
-    private String currentPhase; // DP, SP, MP1, BP, MP2, EP
-    private String turnOwner;    // "PLAYER" ili "OPPONENT"
+    private String currentPhase;
+    private String turnOwner;
     private TurnStatisticsDTO statistics;
     private java.util.List<com.app.backend.dto.AiMoveSuggestionDTO> aiSuggestions = new java.util.ArrayList<>();
 
@@ -24,7 +22,6 @@ public class GameState {
         this.turnOwner = "PLAYER";
     }
 
-    // Getteri i Setteri
     public PlayerState getPlayer() { return player; }
     public void setPlayer(PlayerState player) { this.player = player; }
     public PlayerState getOpponent() { return opponent; }

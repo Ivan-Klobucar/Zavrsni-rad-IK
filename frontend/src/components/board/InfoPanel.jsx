@@ -11,13 +11,12 @@ const getProbabilityStyle = (prob) => {
     return { padding: '10px 8px', backgroundColor: bgColor, color: color, fontWeight: 'bold', fontSize: '13px', borderRadius: '4px', minWidth: '45px', textAlign: 'center', border: '1px solid rgba(0,0,0,0.5)', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.2)' };
 };
 
-// DODANO: aiSuggestions u props
 const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhaseActions, isGameOver, attackingMonster, currentPhase, handleActionClick, setSelectedHandCard, setAttackingMonster, aiSuggestions }) => {
     return (
         <div style={{ width: '25%', minWidth: '250px', maxWidth: '350px', padding: '20px', borderRight: '2px solid #444', display: 'flex', flexDirection: 'column', position: 'relative', overflowY: 'auto' }}>
             <h2 style={{ textAlign: 'center', borderBottom: '1px solid #444', paddingBottom: '10px', fontSize: 'clamp(16px, 1.5vw, 24px)' }}>Detalji Karte</h2>
 
-            {/* DETALJI KARTE */}
+            {/* detalji karte */}
             {selectedHandCard || hoveredCard ? (
                 <div style={{ marginBottom: '20px' }}>
                     <img src={`${BACKEND_URL}${(selectedHandCard || hoveredCard).imageUrl}`} alt="preview" style={{ width: '100%', borderRadius: '8px', marginBottom: '15px', boxShadow: '0 4px 8px rgba(0,0,0,0.5)' }} />
@@ -27,7 +26,7 @@ const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhase
                 </div>
             ) : <p style={{ color: '#888', textAlign: 'center', marginTop: '50px' }}>Prijeđi mišem preko polja.</p>}
 
-            {/* AI SAVJETNIK - PRIKAZUJE SE KADA IGRA TRAJE */}
+            {/* savjet od aia o najuspjesnijim potezima */}
             {!isGameOver && aiSuggestions && aiSuggestions.length > 0 && (
                 <div style={{ marginBottom: '160px', padding: '15px', backgroundColor: '#161616', border: '1px solid #444', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
                     <h3 style={{ color: '#00ffff', margin: '0 0 10px 0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px', textTransform: 'uppercase' }}>
@@ -50,7 +49,7 @@ const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhase
                 </div>
             )}
 
-            {/* IZBORNIK AKCIJA */}
+            {/* akcije koje mozemo sa pojedinom kartom */}
             {selectedHandCard && !tributeState.active && canDoMainPhaseActions && !isGameOver && (
                 <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', backgroundColor: '#222', padding: '15px', borderRadius: '8px', border: '1px solid #e5a822' }}>
                     <h4 style={{ margin: '0 0 10px 0', color: '#00ffff', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ Izvrši Akciju ⚡</span></h4>
@@ -78,7 +77,7 @@ const InfoPanel = ({ selectedHandCard, hoveredCard, tributeState, canDoMainPhase
                 </div>
             )}
 
-            {/* IZBORNIK ZA NAPAD */}
+            {/* izbornik uza napad */}
             {attackingMonster && currentPhase === 'BP' && !isGameOver && (
                 <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', backgroundColor: '#222', padding: '15px', borderRadius: '8px', border: '1px solid red' }}>
                     <h4 style={{ margin: '0 0 10px 0', color: 'red', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}><span style={{ fontSize: '12px' }}>⚡ Potvrda Napada ⚡</span></h4>
